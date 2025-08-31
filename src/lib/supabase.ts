@@ -9,11 +9,16 @@ const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 console.log('🔧 Supabase Config Check:');
 console.log('URL:', supabaseUrl);
 console.log('Anon Key:', supabaseAnonKey ? `${supabaseAnonKey.substring(0, 20)}...` : 'MISSING');
+console.log('Environment Mode:', import.meta.env.MODE);
+console.log('All env vars:', Object.keys(import.meta.env));
 console.log('URL Valid:', supabaseUrl?.includes('supabase.co') ? 'YES' : 'NO');
 console.log('Key Valid:', supabaseAnonKey?.startsWith('eyJ') ? 'YES' : 'NO');
 
 // Validar que las variables de entorno estén configuradas
 if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('❌ Missing Supabase environment variables');
+  console.error('VITE_SUPABASE_URL:', supabaseUrl);
+  console.error('VITE_SUPABASE_ANON_KEY exists:', !!supabaseAnonKey);
   throw new Error('Missing Supabase environment variables');
 }
 

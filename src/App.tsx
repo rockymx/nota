@@ -13,7 +13,11 @@ import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
 
+console.log('📱 App component loading...');
+
 function App() {
+  console.log('🔧 App component initializing...');
+  
   // Estados para controlar la interfaz
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -39,8 +43,14 @@ function App() {
     getFilteredNotes,
   } = useSupabaseNotes();
 
+  console.log('👤 User state:', user ? 'authenticated' : 'not authenticated');
+  console.log('⏳ Loading state:', loading);
+  console.log('📝 Notes count:', notes.length);
+  console.log('📁 Folders count:', folders.length);
+
   // Configurar usuario en el servicio de Gemini cuando cambia
   useEffect(() => {
+    console.log('🤖 Setting up Gemini service for user:', user?.id || 'none');
     if (user) {
       geminiService.setUser(user.id);
     } else {
@@ -59,14 +69,18 @@ function App() {
     showDefaultPrompt,
   } = useAIPrompts(user);
 
+  console.log('🧠 AI Prompts count:', aiPrompts.length);
+
   // Función para crear una nueva nota
   const handleCreateNote = () => {
+    console.log('➕ Creating new note...');
     setEditingNote(null);
     setShowEditor(true);
   };
 
   // Función para editar una nota existente
   const handleEditNote = (note: Note) => {
+    console.log('✏️ Editing note:', note.id);
     setEditingNote(note);
     setShowEditor(true);
     setViewingNote(null);
@@ -74,11 +88,13 @@ function App() {
 
   // Función para ver una nota en modal
   const handleViewNote = (note: Note) => {
+    console.log('👁️ Viewing note:', note.id);
     setViewingNote(note);
   };
 
   // Función para guardar una nota (nueva o editada)
   const handleSaveNote = async (title: string, content: string, folderId: string | null) => {
+    console.log('💾 Saving note:', { title, folderId, contentLength: content.length });
     if (editingNote) {
       // Actualizar nota existente
       await updateNote(editingNote.id, { title, content, folderId });
@@ -92,6 +108,7 @@ function App() {
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
   if (loading) {
+    console.log('⏳ Showing loading screen...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -104,11 +121,15 @@ function App() {
 
   // Mostrar formulario de autenticación si no está logueado
   if (!user) {
+    console.log('🔐 Showing auth form...');
     return <AuthForm onSuccess={() => {}} />;
   }
 
+  console.log('🎨 Rendering main app interface...');
+  
   // Obtener notas filtradas según carpeta y fecha seleccionada
   const filteredNotes = getFilteredNotes();
+  console.log('🔍 Filtered notes count:', filteredNotes.length);
 
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">

@@ -20,8 +20,10 @@ export function useSupabaseNotes() {
 
   // Gestión del estado de autenticación
   useEffect(() => {
+    console.log('🔐 useSupabaseNotes: Setting up auth listener...');
     const getUser = async () => {
       try {
+        console.log('👤 Getting current user...');
         // Agregar timeout para evitar que se cuelgue la aplicación
         const getUserPromise = supabase.auth.getUser();
         const timeoutPromise = new Promise((_, reject) => 
@@ -29,6 +31,7 @@ export function useSupabaseNotes() {
         );
         
         const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise]) as any;
+        console.log('👤 Current user:', user ? user.email : 'none');
         setUser(user);
       } catch (error) {
         console.error('❌ Error getting user:', error);
@@ -43,6 +46,7 @@ export function useSupabaseNotes() {
         }
         setUser(null);
       } finally {
+        console.log('✅ Auth check completed');
         setLoading(false);
       }
     };
@@ -63,10 +67,13 @@ export function useSupabaseNotes() {
 
   // Cargar datos cuando el usuario está autenticado
   useEffect(() => {
+    console.log('📊 useSupabaseNotes: User effect triggered, user:', user?.email || 'none');
     if (user) {
+      console.log('📥 Loading user data...');
       loadUserData();
     } else {
       // Limpiar datos cuando no hay usuario
+      console.log('🧹 Clearing data (no user)...');
       setNotes([]);
       setFolders([]);
     }
