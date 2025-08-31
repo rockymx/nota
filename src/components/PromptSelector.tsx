@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ChevronDown, Wand2, Sparkles } from 'lucide-react';
 import { AIPrompt } from '../types';
 

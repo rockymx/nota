@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Plus, Edit3, Trash2, Sparkles, Tag } from 'lucide-react';
 import { AIPrompt } from '../types';
 import { CreatePromptModal } from './CreatePromptModal';
@@ -34,11 +34,12 @@ export function PromptsManagement({
     setShowCreateModal(true);
   };
 
-  const handleCreateOrUpdate = async (name: string, description: string, promptTemplate: string, category: string) => {
+  const handleCreateOrUpdate = async (name: string, description: string, promptTemplate: string, category: string): Promise<AIPrompt | null> => {
     if (editingPrompt) {
       await onUpdatePrompt(editingPrompt.id, { name, description, promptTemplate, category });
+      return null;
     } else {
-      await onCreatePrompt(name, description, promptTemplate, category);
+      return await onCreatePrompt(name, description, promptTemplate, category);
     }
     setEditingPrompt(null);
   };
