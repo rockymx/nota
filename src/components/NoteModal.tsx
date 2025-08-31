@@ -85,3 +85,4 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
       </div>
     </div>
   );
+}
