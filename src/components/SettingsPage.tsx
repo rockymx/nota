@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, User, Sparkles, Palette, BarChart3, Download, Upload, MessageSquare } from 'lucide-react';
 import { User as SupabaseUser } from '@supabase/supabase-js';
 import { AIPrompt } from '../types';
 import { geminiService } from '../services/geminiService';
 import { auth, supabase } from '../lib/supabase';
 import { PromptsManagement } from './PromptsManagement';
+import { Database } from '../lib/database.types';
 
 interface SettingsPageProps {
   user: SupabaseUser;
@@ -63,7 +64,7 @@ export function SettingsPage({
         .from('user_settings')
         .select('theme, auto_save')
         .eq('user_id', user.id)
-        .maybeSingle();
+        .maybeSingle<Pick<Database['public']['Tables']['user_settings']['Row'], 'theme' | 'auto_save'>>();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading user settings:', error);
