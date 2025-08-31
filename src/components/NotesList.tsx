@@ -3,6 +3,7 @@ import { Note, Folder as FolderType } from '../types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { Edit3, Trash2, Calendar } from 'lucide-react';
 
 /**
  * Componente que muestra la lista de notas en formato de tarjetas
@@ -54,7 +55,6 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
               </h3>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
-                  onClick={() => onEditNote(note)}
                   onClick={(e) => {
                     e.stopPropagation();
                     onEditNote(note);
@@ -112,3 +112,4 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
       })}
     </div>
   );
+}
