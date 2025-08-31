@@ -15,7 +15,6 @@ interface NoteEditorProps {
   folders: Folder[];
   aiPrompts: AIPrompt[];
   hiddenPromptIds: Set<string>;
-  hiddenPromptIds: Set<string>;
   onSave: (title: string, content: string, folderId: string | null) => void;
   onClose: () => void;
 }

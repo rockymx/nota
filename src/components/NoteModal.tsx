@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, Edit3, Calendar, Folder } from 'lucide-react';
 import { Note, Folder as FolderType } from '../types';
 import { format } from 'date-fns';
