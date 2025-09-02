@@ -13,10 +13,21 @@ import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
 
-console.log('📱 App component loading...');
+console.log('📱 App component module loading...');
+console.log('🔍 Environment check in App:', {
+  mode: import.meta.env.MODE,
+  prod: import.meta.env.PROD,
+  dev: import.meta.env.DEV,
+  baseUrl: import.meta.env.BASE_URL
+});
 
 function App() {
-  console.log('🔧 App component initializing...');
+  console.log('🔧 App component function executing...');
+  console.log('🔍 Runtime environment check:', {
+    userAgent: navigator.userAgent,
+    location: window.location.href,
+    origin: window.location.origin
+  });
   
   // Estados para controlar la interfaz
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -24,6 +35,8 @@ function App() {
   const [showEditor, setShowEditor] = useState(false);
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [showSettings, setShowSettings] = useState(false);
+  
+  console.log('🎛️ App state initialized');
   
   // Hook que maneja toda la lógica de notas y autenticación
   const {
@@ -43,18 +56,25 @@ function App() {
     getFilteredNotes,
   } = useSupabaseNotes();
 
-  console.log('👤 User state:', user ? 'authenticated' : 'not authenticated');
-  console.log('⏳ Loading state:', loading);
-  console.log('📝 Notes count:', notes.length);
-  console.log('📁 Folders count:', folders.length);
+  console.log('📊 App data state:', {
+    user: user ? `authenticated (${user.email})` : 'not authenticated',
+    loading,
+    notesCount: notes.length,
+    foldersCount: folders.length,
+    selectedFolderId,
+    selectedDate: selectedDate?.toISOString()
+  });
 
   // Configurar usuario en el servicio de Gemini cuando cambia
   useEffect(() => {
-    console.log('🤖 Setting up Gemini service for user:', user?.id || 'none');
+    console.log('🤖 Gemini service setup effect triggered');
+    console.log('👤 User for Gemini:', user?.id || 'none');
     if (user) {
       geminiService.setUser(user.id);
+      console.log('✅ Gemini service user set');
     } else {
       geminiService.setUser(null);
+      console.log('🔄 Gemini service user cleared');
     }
   }, [user]);
 
@@ -69,18 +89,21 @@ function App() {
     showDefaultPrompt,
   } = useAIPrompts(user);
 
-  console.log('🧠 AI Prompts count:', aiPrompts.length);
+  console.log('🧠 AI Prompts state:', {
+    promptsCount: aiPrompts.length,
+    hiddenCount: hiddenPromptIds.size
+  });
 
   // Función para crear una nueva nota
   const handleCreateNote = () => {
-    console.log('➕ Creating new note...');
+    console.log('➕ User action: Creating new note');
     setEditingNote(null);
     setShowEditor(true);
   };
 
   // Función para editar una nota existente
   const handleEditNote = (note: Note) => {
-    console.log('✏️ Editing note:', note.id);
+    console.log('✏️ User action: Editing note', note.id);
     setEditingNote(note);
     setShowEditor(true);
     setViewingNote(null);
@@ -88,32 +111,43 @@ function App() {
 
   // Función para ver una nota en modal
   const handleViewNote = (note: Note) => {
-    console.log('👁️ Viewing note:', note.id);
+    console.log('👁️ User action: Viewing note', note.id);
     setViewingNote(note);
   };
 
   // Función para guardar una nota (nueva o editada)
   const handleSaveNote = async (title: string, content: string, folderId: string | null) => {
-    console.log('💾 Saving note:', { title, folderId, contentLength: content.length });
+    console.log('💾 User action: Saving note', { 
+      title, 
+      folderId, 
+      contentLength: content.length,
+      isEditing: !!editingNote 
+    });
+    
     if (editingNote) {
       // Actualizar nota existente
+      console.log('🔄 Updating existing note:', editingNote.id);
       await updateNote(editingNote.id, { title, content, folderId });
     } else {
       // Crear nueva nota
+      console.log('➕ Creating new note');
       await createNote(title, content, folderId);
     }
+    
+    console.log('✅ Note save operation completed');
     setShowEditor(false);
     setEditingNote(null);
   };
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
   if (loading) {
-    console.log('⏳ Showing loading screen...');
+    console.log('⏳ Rendering loading screen...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Cargando...</p>
+          <p className="text-gray-600">Cargando NotesApp...</p>
+          <p className="text-xs text-gray-500 mt-2">Verificando autenticación...</p>
         </div>
       </div>
     );
@@ -121,16 +155,22 @@ function App() {
 
   // Mostrar formulario de autenticación si no está logueado
   if (!user) {
-    console.log('🔐 Showing auth form...');
+    console.log('🔐 Rendering auth form (user not authenticated)');
     return <AuthForm onSuccess={() => {}} />;
   }
 
-  console.log('🎨 Rendering main app interface...');
+  console.log('🎨 Rendering main app interface for authenticated user');
   
   // Obtener notas filtradas según carpeta y fecha seleccionada
   const filteredNotes = getFilteredNotes();
-  console.log('🔍 Filtered notes count:', filteredNotes.length);
+  console.log('🔍 Filtered notes for display:', {
+    total: notes.length,
+    filtered: filteredNotes.length,
+    selectedFolder: selectedFolderId,
+    selectedDate: selectedDate?.toDateString()
+  });
 
+  console.log('🎯 About to render main app JSX...');
   return (
     <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
       {/* Barra lateral con carpetas y calendario */}
@@ -216,4 +256,5 @@ function App() {
   );
 }
 
+console.log('✅ App component definition completed');
 export default App;

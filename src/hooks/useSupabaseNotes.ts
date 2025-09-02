@@ -20,60 +20,91 @@ export function useSupabaseNotes() {
 
   // Gestión del estado de autenticación
   useEffect(() => {
-    console.log('🔐 useSupabaseNotes: Setting up auth listener...');
+    console.log('🔐 useSupabaseNotes: Auth effect triggered');
+    console.log('🔍 Current environment:', {
+      mode: import.meta.env.MODE,
+      prod: import.meta.env.PROD,
+      hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
+      hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY
+    });
+    
     const getUser = async () => {
       try {
-        console.log('👤 Getting current user...');
+        console.log('👤 Attempting to get current user from Supabase...');
         // Agregar timeout para evitar que se cuelgue la aplicación
         const getUserPromise = supabase.auth.getUser();
         const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), 15000)
+          setTimeout(() => reject(new Error('Auth timeout after 15s')), 15000)
         );
         
         const { data: { user } } = await Promise.race([getUserPromise, timeoutPromise]) as any;
-        console.log('👤 Current user:', user ? user.email : 'none');
+        console.log('👤 Auth result:', {
+          hasUser: !!user,
+          email: user?.email || 'none',
+          id: user?.id || 'none'
+        });
         setUser(user);
       } catch (error) {
-        console.error('❌ Error getting user:', error);
+        console.error('❌ Critical auth error:', error);
+        console.error('❌ Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : 'No stack'
+        });
+        
         // Si es un error de sesión inválida, cerrar sesión
         if (error instanceof Error && (
           error.message.includes('session_not_found') ||
           error.message.includes('JWT expired') ||
-          error.message.includes('403')
+          error.message.includes('403') ||
+          error.message.includes('Auth timeout')
         )) {
-          console.log('🔓 Invalid session detected, signing out...');
+          console.log('🔓 Invalid/expired session detected, signing out...');
           await supabase.auth.signOut();
         }
         setUser(null);
       } finally {
-        console.log('✅ Auth check completed');
+        console.log('✅ Auth check completed, setting loading to false');
         setLoading(false);
       }
     };
 
+    console.log('🚀 Starting auth check...');
     getUser();
 
     // Escuchar cambios en el estado de autenticación
+    console.log('👂 Setting up auth state change listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
-        console.log('🔐 Auth state changed:', event, session?.user?.email);
+        console.log('🔐 Auth state change event:', {
+          event,
+          hasSession: !!session,
+          userEmail: session?.user?.email || 'none',
+          userId: session?.user?.id || 'none'
+        });
         setUser(session?.user ?? null);
         setLoading(false);
       }
     );
 
+    console.log('✅ Auth listener setup completed');
     return () => subscription.unsubscribe();
   }, []);
 
   // Cargar datos cuando el usuario está autenticado
   useEffect(() => {
-    console.log('📊 useSupabaseNotes: User effect triggered, user:', user?.email || 'none');
+    console.log('📊 useSupabaseNotes: Data loading effect triggered');
+    console.log('👤 User state for data loading:', {
+      hasUser: !!user,
+      email: user?.email || 'none',
+      id: user?.id || 'none'
+    });
+    
     if (user) {
-      console.log('📥 Loading user data...');
+      console.log('📥 User authenticated, starting data load...');
       loadUserData();
     } else {
       // Limpiar datos cuando no hay usuario
-      console.log('🧹 Clearing data (no user)...');
+      console.log('🧹 No user, clearing local data...');
       setNotes([]);
       setFolders([]);
     }
@@ -86,7 +117,8 @@ export function useSupabaseNotes() {
     if (!user) return;
 
     try {
-      console.log('📥 Loading user data from Supabase...');
+      console.log('📥 Starting loadUserData for user:', user.id);
+      console.log('🔗 Testing Supabase connection...');
       
       // Verificar conectividad básica con timeout y retry
       const healthCheckPromise = supabase
@@ -99,8 +131,9 @@ export function useSupabaseNotes() {
       );
       
       await Promise.race([healthCheckPromise, timeoutPromise]);
-      console.log('🔗 Supabase connection test passed');
+      console.log('✅ Supabase connection test passed');
 
+      console.log('📁 Loading folders from Supabase...');
       // Cargar carpetas
       const foldersPromise = supabase
         .from('folders')
@@ -115,7 +148,12 @@ export function useSupabaseNotes() {
       const { data: foldersData, error: foldersError } = await Promise.race([foldersPromise, foldersTimeoutPromise]) as any;
 
       if (foldersError) {
-        console.error('❌ Error loading folders:', foldersError);
+        console.error('❌ Folders loading error:', {
+          error: foldersError,
+          code: foldersError.code,
+          message: foldersError.message,
+          details: foldersError.details
+        });
       } else {
         const loadedFolders: Folder[] = foldersData.map(folder => ({
           id: folder.id,
@@ -124,9 +162,13 @@ export function useSupabaseNotes() {
           createdAt: new Date(folder.created_at),
         }));
         setFolders(loadedFolders);
-        console.log('✅ Loaded folders:', loadedFolders.length);
+        console.log('✅ Folders loaded successfully:', {
+          count: loadedFolders.length,
+          folders: loadedFolders.map(f => ({ id: f.id, name: f.name }))
+        });
       }
 
+      console.log('📝 Loading notes from Supabase...');
       // Cargar notas
       const notesPromise = supabase
         .from('notes')
@@ -141,7 +183,12 @@ export function useSupabaseNotes() {
       const { data: notesData, error: notesError } = await Promise.race([notesPromise, notesTimeoutPromise]) as any;
 
       if (notesError) {
-        console.error('❌ Error loading notes:', notesError);
+        console.error('❌ Notes loading error:', {
+          error: notesError,
+          code: notesError.code,
+          message: notesError.message,
+          details: notesError.details
+        });
       } else {
         const loadedNotes: Note[] = notesData.map(note => ({
           id: note.id,
@@ -153,18 +200,28 @@ export function useSupabaseNotes() {
           updatedAt: new Date(note.updated_at),
         }));
         setNotes(loadedNotes);
-        console.log('✅ Loaded notes:', loadedNotes.length);
+        console.log('✅ Notes loaded successfully:', {
+          count: loadedNotes.length,
+          notes: loadedNotes.map(n => ({ id: n.id, title: n.title }))
+        });
       }
+      
+      console.log('✅ loadUserData completed successfully');
     } catch (error) {
-      console.error('❌ Error loading user data:', error);
+      console.error('❌ Critical error in loadUserData:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : 'No stack',
+        userId: user.id
+      });
       
       // Manejo específico de errores de red con retry
       if (error instanceof TypeError && error.message.includes('Failed to fetch')) {
-        console.error('🌐 Network error detected. Retrying in 3 seconds...');
+        console.error('🌐 Network error detected in production. Retrying in 3 seconds...');
         
         // Retry después de 3 segundos
         setTimeout(() => {
-          console.log('🔄 Retrying data load...');
+          console.log('🔄 Network retry: Attempting data load again...');
           loadUserData();
         }, 3000);
         return;
@@ -172,11 +229,11 @@ export function useSupabaseNotes() {
       
       // Manejo de errores de timeout
       if (error instanceof Error && error.message.includes('timeout')) {
-        console.error('⏱️ Request timeout. Retrying with longer timeout...');
+        console.error('⏱️ Request timeout in production. Retrying...');
         
         // Retry después de 2 segundos
         setTimeout(() => {
-          console.log('🔄 Retrying data load with extended timeout...');
+          console.log('🔄 Timeout retry: Attempting data load again...');
           loadUserData();
         }, 2000);
         return;
@@ -186,9 +243,10 @@ export function useSupabaseNotes() {
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
         error.message.includes('JWT expired') ||
-        error.message.includes('403')
+        error.message.includes('403') ||
+        error.message.includes('unauthorized')
       )) {
-        console.log('🔓 Invalid session detected, signing out...');
+        console.log('🔓 Invalid session detected in production, signing out...');
         await supabase.auth.signOut();
       }
     }
@@ -204,7 +262,7 @@ export function useSupabaseNotes() {
     if (!user) return null;
     
     try {
-      console.log('📁 Creating folder:', { name, color });
+      console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
       const insertPromise = supabase
         .from('folders')
@@ -232,10 +290,20 @@ export function useSupabaseNotes() {
       };
 
       setFolders(prev => [...prev, newFolder]);
-      console.log('✅ Folder created successfully:', newFolder);
+      console.log('✅ Folder created successfully:', {
+        id: newFolder.id,
+        name: newFolder.name,
+        color: newFolder.color
+      });
       return newFolder;
     } catch (error) {
-      console.error('❌ Error creating folder:', error);
+      console.error('❌ createFolder error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown',
+        userId: user.id,
+        folderName: name
+      });
+      
       // Si es un error de sesión inválida, cerrar sesión
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
@@ -254,7 +322,7 @@ export function useSupabaseNotes() {
         createdAt: new Date(),
       };
       setFolders(prev => [...prev, fallbackFolder]);
-      console.log('⚠️ Using fallback folder creation');
+      console.log('⚠️ Using fallback folder creation due to error');
       return fallbackFolder;
     }
   };
@@ -270,7 +338,14 @@ export function useSupabaseNotes() {
     if (!user) return null;
 
     try {
-      console.log('📝 Creating note:', { title, content: content.substring(0, 50) + '...', folderId });
+      console.log('📝 createNote called:', { 
+        title, 
+        contentLength: content.length,
+        contentPreview: content.substring(0, 50) + '...', 
+        folderId,
+        userId: user.id 
+      });
+      
       // Usar timeout para evitar que se cuelgue
       const insertPromise = supabase
         .from('notes')
@@ -302,10 +377,20 @@ export function useSupabaseNotes() {
       };
 
       setNotes(prev => [newNote, ...prev]);
-      console.log('✅ Note created successfully:', newNote.id);
+      console.log('✅ Note created successfully:', {
+        id: newNote.id,
+        title: newNote.title,
+        folderId: newNote.folderId
+      });
       return newNote;
     } catch (error) {
-      console.error('❌ Error creating note:', error);
+      console.error('❌ createNote error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown',
+        userId: user.id,
+        noteTitle: title
+      });
+      
       // Si es un error de sesión inválida, cerrar sesión
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
@@ -327,7 +412,7 @@ export function useSupabaseNotes() {
         updatedAt: new Date(),
       };
       setNotes(prev => [fallbackNote, ...prev]);
-      console.log('⚠️ Using fallback note creation');
+      console.log('⚠️ Using fallback note creation due to error');
       return fallbackNote;
     }
   };
@@ -341,7 +426,12 @@ export function useSupabaseNotes() {
     if (!user) return;
 
     try {
-      console.log('✏️ Updating note:', id, updates);
+      console.log('✏️ updateNote called:', { 
+        noteId: id, 
+        updates,
+        userId: user.id 
+      });
+      
       // Mapear folderId a folder_id para Supabase
       const supabaseUpdates: any = { ...updates };
       if ('folderId' in updates) {
@@ -375,9 +465,15 @@ export function useSupabaseNotes() {
           ? { ...note, ...updates, updatedAt: new Date() }
           : note
       ));
-      console.log('✅ Note updated successfully');
+      console.log('✅ Note updated successfully:', id);
     } catch (error) {
-      console.error('❌ Error updating note:', error);
+      console.error('❌ updateNote error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown',
+        noteId: id,
+        userId: user.id
+      });
+      
       // Si es un error de sesión inválida, cerrar sesión
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
@@ -394,7 +490,7 @@ export function useSupabaseNotes() {
           ? { ...note, ...updates, updatedAt: new Date() }
           : note
       ));
-      console.log('⚠️ Using fallback note update');
+      console.log('⚠️ Using fallback note update due to error');
     }
   };
 
@@ -406,6 +502,8 @@ export function useSupabaseNotes() {
     if (!user) return;
 
     try {
+      console.log('🗑️ deleteNote called:', { noteId: id, userId: user.id });
+      
       const deletePromise = supabase
         .from('notes')
         .delete()
@@ -419,8 +517,15 @@ export function useSupabaseNotes() {
       await Promise.race([deletePromise, timeoutPromise]);
 
       setNotes(prev => prev.filter(note => note.id !== id));
+      console.log('✅ Note deleted successfully:', id);
     } catch (error) {
-      console.error('❌ Error deleting note:', error);
+      console.error('❌ deleteNote error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown',
+        noteId: id,
+        userId: user.id
+      });
+      
       // Si es un error de sesión inválida, cerrar sesión
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
@@ -433,6 +538,7 @@ export function useSupabaseNotes() {
       }
       // Eliminar localmente como fallback
       setNotes(prev => prev.filter(note => note.id !== id));
+      console.log('⚠️ Using fallback note deletion due to error');
     }
   };
 
@@ -444,6 +550,8 @@ export function useSupabaseNotes() {
     if (!user) return;
 
     try {
+      console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
+      
       // Primero, actualizar notas para remover la asociación con la carpeta
       const updateNotesPromise = supabase
         .from('notes')
@@ -482,8 +590,16 @@ export function useSupabaseNotes() {
       if (selectedFolderId === id) {
         setSelectedFolderId(null);
       }
+      
+      console.log('✅ Folder deleted successfully:', id);
     } catch (error) {
-      console.error('❌ Error deleting folder:', error);
+      console.error('❌ deleteFolder error:', {
+        error,
+        message: error instanceof Error ? error.message : 'Unknown',
+        folderId: id,
+        userId: user.id
+      });
+      
       // Si es un error de sesión inválida, cerrar sesión
       if (error instanceof Error && (
         error.message.includes('session_not_found') ||
@@ -505,6 +621,8 @@ export function useSupabaseNotes() {
       if (selectedFolderId === id) {
         setSelectedFolderId(null);
       }
+      
+      console.log('⚠️ Using fallback folder deletion due to error');
     }
   };
 
@@ -515,9 +633,16 @@ export function useSupabaseNotes() {
   const getFilteredNotes = () => {
     let filtered = notes;
 
+    console.log('🔍 getFilteredNotes called:', {
+      totalNotes: notes.length,
+      selectedFolderId,
+      selectedDate: selectedDate?.toISOString()
+    });
+
     // Filtrar por carpeta si hay una seleccionada
     if (selectedFolderId) {
       filtered = filtered.filter(note => note.folderId === selectedFolderId);
+      console.log('📁 Filtered by folder:', filtered.length);
     }
 
     // Filtrar por fecha si hay una seleccionada
@@ -526,10 +651,19 @@ export function useSupabaseNotes() {
       filtered = filtered.filter(note => 
         new Date(note.createdAt).toDateString() === dateStr
       );
+      console.log('📅 Filtered by date:', filtered.length);
     }
 
+    console.log('✅ Final filtered notes:', filtered.length);
     return filtered;
   };
+
+  console.log('🔄 useSupabaseNotes hook returning state:', {
+    hasUser: !!user,
+    loading,
+    notesCount: notes.length,
+    foldersCount: folders.length
+  });
 
   // Retornar todas las funciones y estados necesarios
   return {
