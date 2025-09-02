@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { AIPrompt } from '../types';
 import { User } from '@supabase/supabase-js';
+import { Database } from '../lib/database.types';
 
 /**
  * Hook personalizado para manejar prompts de IA con Supabase
@@ -97,7 +98,7 @@ export function useAIPrompts(user: User | null) {
           category,
           is_default: false,
           user_id: user.id,
-        })
+        } as Database['public']['Tables']['ai_prompts']['Insert'])
         .select('*')
         .single();
 
@@ -200,7 +201,7 @@ export function useAIPrompts(user: User | null) {
         .insert({
           user_id: user.id,
           prompt_id: promptId,
-        });
+        } as Database['public']['Tables']['hidden_prompts']['Insert']);
 
       if (error) throw error;
 
