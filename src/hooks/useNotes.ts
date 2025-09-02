@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Note, Folder } from '../types';
 import { useLocalStorage } from './useLocalStorage';
 

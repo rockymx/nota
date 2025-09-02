@@ -1,4 +1,3 @@
-import { AIConfig } from '../types';
 import { supabase } from '../lib/supabase';
 
 class GeminiService {
@@ -40,7 +39,7 @@ class GeminiService {
       if (error) {
         throw error;
       } else {
-        this.apiKey = data?.gemini_api_key || null;
+        this.apiKey = (data as any)?.gemini_api_key || null;
         console.log('✅ Gemini API key loaded from Supabase');
       }
     } catch (error) {
@@ -69,7 +68,7 @@ class GeminiService {
         .update({ 
           gemini_api_key: apiKey,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('user_id', this.userId);
 
       if (updateError) {
@@ -80,7 +79,7 @@ class GeminiService {
             .insert({
               user_id: this.userId,
               gemini_api_key: apiKey,
-            });
+            } as any);
 
           if (insertError) throw insertError;
         } else {
@@ -121,7 +120,7 @@ class GeminiService {
         .update({ 
           gemini_api_key: null,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('user_id', this.userId);
 
       if (error) throw error;

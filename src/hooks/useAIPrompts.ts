@@ -39,7 +39,7 @@ export function useAIPrompts(user: User | null) {
       if (hiddenError) {
         console.error('❌ Error loading hidden prompts:', hiddenError);
       } else {
-        const hiddenIds = new Set(hiddenData.map(h => h.prompt_id));
+        const hiddenIds = new Set(hiddenData.map((h: any) => h.prompt_id));
         setHiddenPromptIds(hiddenIds);
       }
 
@@ -53,7 +53,7 @@ export function useAIPrompts(user: User | null) {
 
       if (error) throw error;
 
-      const loadedPrompts: AIPrompt[] = data.map(prompt => ({
+      const loadedPrompts: AIPrompt[] = data.map((prompt: any) => ({
         id: prompt.id,
         name: prompt.name,
         description: prompt.description,
@@ -145,7 +145,7 @@ export function useAIPrompts(user: User | null) {
 
       const { error } = await supabase
         .from('ai_prompts')
-        .update(supabaseUpdates)
+        .update(supabaseUpdates as any)
         .eq('id', id)
         .eq('user_id', user.id);
 
