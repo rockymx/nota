@@ -149,5 +149,18 @@ export interface Database {
         }
       }
     }
+    Views: {
+      admin_user_stats: {
+        Row: {
+          id: string
+          email: string
+          registered_at: string
+          total_notes: number
+          total_folders: number
+          custom_prompts: number
+          last_activity: string | null
+        }
+      }
+    }
   }
 }

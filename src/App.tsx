@@ -36,6 +36,7 @@ function App() {
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   
+  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   console.log('🎛️ App state initialized');
   
   // Hook que maneja toda la lógica de notas y autenticación
@@ -88,6 +89,17 @@ function App() {
     hideDefaultPrompt,
     showDefaultPrompt,
   } = useAIPrompts(user);
+
+  // Hook para funciones de administrador
+  const {
+    isAdmin,
+    loading: adminLoading,
+    userStats,
+    dashboardStats,
+    addAdmin,
+    removeAdmin,
+    toggleUserStatus,
+  } = useAdminUsers(user);
 
   console.log('🧠 AI Prompts state:', {
     promptsCount: aiPrompts.length,
@@ -206,6 +218,7 @@ function App() {
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}
+        onShowAdmin={isAdmin ? () => setShowAdminDashboard(true) : undefined}
       />
 
       {/* Contenido principal */}
@@ -250,6 +263,16 @@ function App() {
               onDeletePrompt={deletePrompt}
               onHideDefaultPrompt={hideDefaultPrompt}
               onShowDefaultPrompt={showDefaultPrompt}
+            />
+          ) : showAdminDashboard ? (
+            <AdminDashboard
+              user={user}
+              userStats={userStats}
+              dashboardStats={dashboardStats}
+              onBack={() => setShowAdminDashboard(false)}
+              onAddAdmin={addAdmin}
+              onRemoveAdmin={removeAdmin}
+              onToggleUserStatus={toggleUserStatus}
             />
           ) : (
             <NotesList

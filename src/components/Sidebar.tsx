@@ -35,6 +35,7 @@ export function Sidebar({
   onCreateFolder,
   onDeleteFolder,
   onShowSettings,
+  onShowAdmin,
 }: SidebarProps) {
   // Estados para controlar la vista activa y modales
   const [activeView, setActiveView] = useState<'folders' | 'calendar'>('folders');
@@ -138,15 +139,32 @@ export function Sidebar({
 
         {/* Pie con configuración de IA */}
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-app">
-          <button
-            onClick={onShowSettings}
-            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-app-secondary transition-colors text-left"
-          >
-            <div className="flex items-center gap-3">
-              <Settings className="w-5 h-5 text-app-secondary" />
-              <span className="text-sm text-app-primary">Configuración</span>
-            </div>
-          </button>
+          <div className="space-y-2">
+            <button
+              onClick={onShowSettings}
+              className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-app-secondary transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <Settings className="w-5 h-5 text-app-secondary" />
+                <span className="text-sm text-app-primary">Configuración</span>
+              </div>
+            </button>
+            
+            {/* Botón de administrador solo para admins */}
+            {onShowAdmin && (
+              <button
+                onClick={onShowAdmin}
+                className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 transition-colors text-left border border-purple-200 dark:border-purple-700"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-5 h-5 bg-purple-500 rounded flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">A</span>
+                  </div>
+                  <span className="text-sm text-purple-700 dark:text-purple-300 font-medium">Admin Panel</span>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
