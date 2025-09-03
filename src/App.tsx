@@ -3,10 +3,11 @@ import { Menu, Plus } from 'lucide-react';
 // Componentes principales de la aplicación
 import { Sidebar } from './components/Sidebar';
 import { NotesList } from './components/NotesList';
+import { NoteEditor } from './components/NoteEditor';
 import { NoteModal } from './components/NoteModal';
 import { SettingsPage } from './components/SettingsPage';
-import { AdminSetup } from './components/AdminSetup';
 // Hook personalizado para manejar notas con Supabase
+import { useSupabaseNotes } from './hooks/useSupabaseNotes';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';

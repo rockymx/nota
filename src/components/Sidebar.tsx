@@ -21,6 +21,7 @@ interface SidebarProps {
   onCreateFolder: (name: string, color: string) => Promise<FolderType | null>;
   onDeleteFolder: (id: string) => void;
   onShowSettings: () => void;
+  onShowAdmin?: () => void;
 }
 
 export function Sidebar({
@@ -35,6 +36,7 @@ export function Sidebar({
   onCreateFolder,
   onDeleteFolder,
   onShowSettings,
+  onShowAdmin,
   onShowAdmin,
 }: SidebarProps) {
   // Estados para controlar la vista activa y modales
