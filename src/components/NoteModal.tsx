@@ -21,8 +21,8 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-4">
-      <div className="bg-white rounded-xl md:rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] md:max-h-[90vh] overflow-hidden 
-                      fixed md:relative inset-0 md:inset-auto h-full md:h-auto bg-app transition-colors duration-300">
+      <div className="bg-app rounded-xl md:rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] md:max-h-[90vh] overflow-hidden 
+                      fixed md:relative inset-0 md:inset-auto h-full md:h-auto transition-colors duration-300 border border-app">
         {/* Header */}
         <div className="flex items-center justify-between p-4 md:p-6 border-b border-app">
           <h2 className="text-xl font-semibold text-app-primary flex-1 pr-4">
@@ -31,7 +31,7 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
           <div className="flex items-center gap-2">
             <button
               onClick={handleEdit}
-              className="p-2 rounded-lg hover:bg-blue-50 text-blue-600 transition-colors"
+              className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
               title="Editar nota"
             >
               <Edit3 className="w-5 h-5" />
@@ -50,7 +50,7 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
           {note.content ? (
             <MarkdownRenderer content={note.content} />
           ) : (
-            <p className="text-app-secondary italic">Esta nota no tiene contenido...</p>
+            <p className="text-app-tertiary italic">Esta nota no tiene contenido...</p>
           )}
         </div>
 
