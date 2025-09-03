@@ -1,11 +1,9 @@
-import React, { useState } from 'react';
-import { Menu, X, Plus, Calendar, Folder, Settings, LogOut } from 'lucide-react';
+import { useState } from 'react';
+import { X, Plus, Calendar, Folder, Settings } from 'lucide-react';
 import { FolderList } from './FolderList';
 import { CalendarView } from './CalendarView';
 import { CreateFolderModal } from './CreateFolderModal';
-import { AIConfigModal } from './AIConfigModal';
 import { User } from '@supabase/supabase-js';
-import { supabase } from '../lib/supabase';
 import { Folder as FolderType } from '../types';
 
 /**
@@ -42,7 +40,6 @@ export function Sidebar({
   // Estados para controlar la vista activa y modales
   const [activeView, setActiveView] = useState<'folders' | 'calendar'>('folders');
   const [showCreateFolder, setShowCreateFolder] = useState(false);
-  const [showAIConfig, setShowAIConfig] = useState(false);
 
   // Función para crear carpeta con manejo de errores
   const handleCreateFolder = async (name: string, color: string) => {

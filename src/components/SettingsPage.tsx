@@ -5,7 +5,6 @@ import { AIPrompt } from '../types';
 import { geminiService } from '../services/geminiService';
 import { auth, supabase } from '../lib/supabase';
 import { PromptsManagement } from './PromptsManagement';
-import { Database } from '../lib/database.types';
 
 interface SettingsPageProps {
   user: SupabaseUser;
@@ -64,7 +63,7 @@ export function SettingsPage({
         .from('user_settings')
         .select('theme, auto_save')
         .eq('user_id', user.id)
-        .maybeSingle<Pick<Database['public']['Tables']['user_settings']['Row'], 'theme' | 'auto_save'>>();
+        .maybeSingle();
 
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading user settings:', error);
@@ -127,13 +126,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
-        .upsert([{
+        .upsert({
           user_id: user.id,
           theme: newTheme,
           updated_at: new Date().toISOString()
-        }], { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Theme saved to Supabase');
@@ -147,13 +146,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
-        .upsert([{
+        .upsert({
           user_id: user.id,
           auto_save: enabled,
           updated_at: new Date().toISOString()
-        }], { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Auto-save preference saved to Supabase');

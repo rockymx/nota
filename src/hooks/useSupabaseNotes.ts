@@ -155,7 +155,7 @@ export function useSupabaseNotes() {
           details: foldersError.details
         });
       } else {
-        const loadedFolders: Folder[] = foldersData.map(folder => ({
+        const loadedFolders: Folder[] = foldersData.map((folder: any) => ({
           id: folder.id,
           name: folder.name,
           color: folder.color,
@@ -190,7 +190,7 @@ export function useSupabaseNotes() {
           details: notesError.details
         });
       } else {
-        const loadedNotes: Note[] = notesData.map(note => ({
+        const loadedNotes: Note[] = notesData.map((note: any) => ({
           id: note.id,
           title: note.title,
           content: note.content || '',
@@ -264,7 +264,7 @@ export function useSupabaseNotes() {
     try {
       console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = supabase
+      const insertPromise = (supabase as any)
         .from('folders')
         .insert({
           name,
@@ -347,7 +347,7 @@ export function useSupabaseNotes() {
       });
       
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = supabase
+      const insertPromise = (supabase as any)
         .from('notes')
         .insert({
           title,
@@ -443,12 +443,12 @@ export function useSupabaseNotes() {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const updatePromise = supabase
+      const updatePromise = (supabase as any)
         .from('notes')
         .update({
           ...supabaseUpdates,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -553,9 +553,9 @@ export function useSupabaseNotes() {
       console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
       
       // Primero, actualizar notas para remover la asociación con la carpeta
-      const updateNotesPromise = supabase
+      const updateNotesPromise = (supabase as any)
         .from('notes')
-        .update({ folder_id: null })
+        .update({ folder_id: null } as any)
         .eq('folder_id', id)
         .eq('user_id', user.id);
 

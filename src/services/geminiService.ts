@@ -1,4 +1,3 @@
-import { AIConfig } from '../types';
 import { supabase } from '../lib/supabase';
 
 class GeminiService {
@@ -31,7 +30,7 @@ class GeminiService {
     try {
       console.log('🔐 Loading Gemini API key from Supabase...');
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_settings')
         .select('gemini_api_key')
         .eq('user_id', this.userId)
@@ -40,7 +39,7 @@ class GeminiService {
       if (error) {
         throw error;
       } else {
-        this.apiKey = data?.gemini_api_key || null;
+        this.apiKey = (data as any)?.gemini_api_key || null;
         console.log('✅ Gemini API key loaded from Supabase');
       }
     } catch (error) {
@@ -64,18 +63,18 @@ class GeminiService {
       console.log('💾 Saving Gemini API key to Supabase...');
       
       // Intentar actualizar primero
-      const { error: updateError } = await supabase
+      const { error: updateError } = await (supabase as any)
         .from('user_settings')
         .update({ 
           gemini_api_key: apiKey,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('user_id', this.userId);
 
       if (updateError) {
         if (updateError.code === 'PGRST116') {
           // No existe registro, crear uno nuevo
-          const { error: insertError } = await supabase
+          const { error: insertError } = await (supabase as any)
             .from('user_settings')
             .insert({
               user_id: this.userId,
@@ -116,12 +115,12 @@ class GeminiService {
     try {
       console.log('🗑️ Removing Gemini API key from Supabase...');
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
         .update({ 
           gemini_api_key: null,
           updated_at: new Date().toISOString()
-        })
+        } as any)
         .eq('user_id', this.userId);
 
       if (error) throw error;
