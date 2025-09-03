@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, FileText, Folder, Sparkles, Activity, UserPlus, Search, ArrowLeft, Home, User } from 'lucide-react';
+import { Shield, Users, FileText, Folder, Sparkles, Activity, UserPlus, Search, ArrowLeft, Home, User as UserIcon } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { UserStats, DashboardStats } from '../../types/admin';
@@ -318,7 +318,7 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
                   onClick={() => setShowAddUser(true)}
                   className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
                 >
-                  <User className="w-4 h-4" />
+                  <UserIcon className="w-4 h-4" />
                   Crear Usuario
                 </button>
                 <button
