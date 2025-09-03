@@ -3,7 +3,6 @@ import { X, Plus, Calendar, Folder, Settings } from 'lucide-react';
 import { FolderList } from './FolderList';
 import { CalendarView } from './CalendarView';
 import { CreateFolderModal } from './CreateFolderModal';
-import { User } from '@supabase/supabase-js';
 import { Folder as FolderType } from '../types';
 
 /**

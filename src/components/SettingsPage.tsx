@@ -59,7 +59,7 @@ export function SettingsPage({
       }
 
       // Cargar configuraciones desde Supabase
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('user_settings')
         .select('theme, auto_save')
         .eq('user_id', user.id)
@@ -68,9 +68,9 @@ export function SettingsPage({
       if (error && error.code !== 'PGRST116') {
         console.error('Error loading user settings:', error);
       } else if (data) {
-        setTheme(data.theme as 'light' | 'dark');
-        setAutoSave(data.auto_save);
-        applyTheme(data.theme as 'light' | 'dark');
+        setTheme((data as any).theme as 'light' | 'dark');
+        setAutoSave((data as any).auto_save);
+        applyTheme((data as any).theme as 'light' | 'dark');
       }
     } catch (error) {
       console.error('Error loading user settings:', error);
@@ -126,13 +126,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
-        .upsert([{
+        .upsert({
           user_id: user.id,
           theme: newTheme,
           updated_at: new Date().toISOString()
-        }], { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Theme saved to Supabase');
@@ -146,13 +146,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('user_settings')
-        .upsert([{
+        .upsert({
           user_id: user.id,
           auto_save: enabled,
           updated_at: new Date().toISOString()
-        }], { onConflict: 'user_id' });
+        }, { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Auto-save preference saved to Supabase');

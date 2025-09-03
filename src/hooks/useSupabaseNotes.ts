@@ -135,7 +135,7 @@ export function useSupabaseNotes() {
 
       console.log('📁 Loading folders from Supabase...');
       // Cargar carpetas
-      const foldersPromise = supabase
+      const foldersResult = await (supabase as any)
         .from('folders')
         .select('*')
         .eq('user_id', user.id)
@@ -155,7 +155,7 @@ export function useSupabaseNotes() {
           details: foldersError.details
         });
       } else {
-        const loadedFolders: Folder[] = foldersData.map((folder: any) => ({
+        const loadedFolders: Folder[] = (foldersData as any[]).map((folder: any) => ({
           id: folder.id,
           name: folder.name,
           color: folder.color,
@@ -170,7 +170,7 @@ export function useSupabaseNotes() {
 
       console.log('📝 Loading notes from Supabase...');
       // Cargar notas
-      const notesPromise = supabase
+      const notesResult = await (supabase as any)
         .from('notes')
         .select('*')
         .eq('user_id', user.id)
@@ -190,7 +190,7 @@ export function useSupabaseNotes() {
           details: notesError.details
         });
       } else {
-        const loadedNotes: Note[] = notesData.map((note: any) => ({
+        const loadedNotes: Note[] = (notesData as any[]).map((note: any) => ({
           id: note.id,
           title: note.title,
           content: note.content || '',
@@ -264,13 +264,13 @@ export function useSupabaseNotes() {
     try {
       console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = supabase
+      const { data, error } = await (supabase as any)
         .from('folders')
-        .insert({
+        .insert([{
           name,
           color,
           user_id: user.id,
-        })
+        }])
         .select('*')
         .single();
 
@@ -283,10 +283,10 @@ export function useSupabaseNotes() {
       if (error) throw error;
 
       const newFolder: Folder = {
-        id: data.id,
-        name: data.name,
-        color: data.color,
-        createdAt: new Date(data.created_at),
+        id: (data as any).id,
+        name: (data as any).name,
+        color: (data as any).color,
+        createdAt: new Date((data as any).created_at),
       };
 
       setFolders(prev => [...prev, newFolder]);
@@ -347,14 +347,14 @@ export function useSupabaseNotes() {
       });
       
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = supabase
+      const { data, error } = await (supabase as any)
         .from('notes')
-        .insert({
+        .insert([{
           title,
           content,
           folder_id: folderId,
           user_id: user.id,
-        })
+        }])
         .select('*')
         .single();
 
@@ -367,13 +367,13 @@ export function useSupabaseNotes() {
       if (error) throw error;
 
       const newNote: Note = {
-        id: data.id,
-        title: data.title,
-        content: data.content || '',
-        folderId: data.folder_id,
-        tags: data.tags || [],
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
+        id: (data as any).id,
+        title: (data as any).title,
+        content: (data as any).content || '',
+        folderId: (data as any).folder_id,
+        tags: (data as any).tags || [],
+        createdAt: new Date((data as any).created_at),
+        updatedAt: new Date((data as any).updated_at),
       };
 
       setNotes(prev => [newNote, ...prev]);
@@ -443,12 +443,12 @@ export function useSupabaseNotes() {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const updatePromise = supabase
+      const { error } = await (supabase as any)
         .from('notes')
-        .update({
+        .update([{
           ...supabaseUpdates,
           updated_at: new Date().toISOString(),
-        } as any)
+        }])
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -504,7 +504,7 @@ export function useSupabaseNotes() {
     try {
       console.log('🗑️ deleteNote called:', { noteId: id, userId: user.id });
       
-      const deletePromise = supabase
+      const { error } = await (supabase as any)
         .from('notes')
         .delete()
         .eq('id', id)
@@ -553,14 +553,14 @@ export function useSupabaseNotes() {
       console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
       
       // Primero, actualizar notas para remover la asociación con la carpeta
-      const updateNotesPromise = supabase
+      await (supabase as any)
         .from('notes')
-        .update({ folder_id: null } as any)
+        .update([{ folder_id: null }])
         .eq('folder_id', id)
         .eq('user_id', user.id);
 
       const timeoutPromise1 = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout')), 10000)
+      const { error } = await (supabase as any)
       );
 
       const { error: moveError } = await Promise.race([updateNotesPromise, timeoutPromise1]) as any;

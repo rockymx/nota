@@ -31,7 +31,7 @@ export function useAIPrompts(user: User | null) {
       console.log('🤖 Loading AI prompts from Supabase...');
       
       // Cargar prompts ocultos del usuario
-      const { data: hiddenData, error: hiddenError } = await supabase
+      const { data: hiddenData, error: hiddenError } = await (supabase as any)
         .from('hidden_prompts')
         .select('prompt_id')
         .eq('user_id', user.id);
@@ -39,12 +39,12 @@ export function useAIPrompts(user: User | null) {
       if (hiddenError) {
         console.error('❌ Error loading hidden prompts:', hiddenError);
       } else {
-        const hiddenIds = new Set(hiddenData.map((h: any) => h.prompt_id));
+        const hiddenIds = new Set((hiddenData as any[]).map((h: any) => h.prompt_id));
         setHiddenPromptIds(hiddenIds);
       }
 
       // Cargar todos los prompts
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_prompts')
         .select('*')
         .or(`user_id.eq.${user.id},is_default.eq.true`)
@@ -53,7 +53,7 @@ export function useAIPrompts(user: User | null) {
 
       if (error) throw error;
 
-      const loadedPrompts: AIPrompt[] = data.map((prompt: any) => ({
+      const loadedPrompts: AIPrompt[] = (data as any[]).map((prompt: any) => ({
         id: prompt.id,
         name: prompt.name,
         description: prompt.description,
@@ -88,31 +88,31 @@ export function useAIPrompts(user: User | null) {
     try {
       console.log('➕ Creating new AI prompt:', { name, category });
       
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from('ai_prompts')
-        .insert({
+        .insert([{
           name,
           description,
           prompt_template: promptTemplate,
           category,
           is_default: false,
           user_id: user.id,
-        })
+        }])
         .select('*')
         .single();
 
       if (error) throw error;
 
       const newPrompt: AIPrompt = {
-        id: data.id,
-        name: data.name,
-        description: data.description,
-        promptTemplate: data.prompt_template,
-        category: data.category,
-        isDefault: data.is_default,
-        userId: data.user_id,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
+        id: (data as any).id,
+        name: (data as any).name,
+        description: (data as any).description,
+        promptTemplate: (data as any).prompt_template,
+        category: (data as any).category,
+        isDefault: (data as any).is_default,
+        userId: (data as any).user_id,
+        createdAt: new Date((data as any).created_at),
+        updatedAt: new Date((data as any).updated_at),
       };
 
       setPrompts(prev => [newPrompt, ...prev]);
@@ -143,9 +143,9 @@ export function useAIPrompts(user: User | null) {
       if (updates.category) supabaseUpdates.category = updates.category;
       supabaseUpdates.updated_at = new Date().toISOString();
 
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ai_prompts')
-        .update(supabaseUpdates as any)
+        .update(supabaseUpdates)
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -171,7 +171,7 @@ export function useAIPrompts(user: User | null) {
     try {
       console.log('🗑️ Deleting AI prompt:', id);
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('ai_prompts')
         .delete()
         .eq('id', id)
@@ -195,12 +195,12 @@ export function useAIPrompts(user: User | null) {
     try {
       console.log('👁️ Hiding default prompt:', promptId);
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('hidden_prompts')
-        .insert({
+        .insert([{
           user_id: user.id,
           prompt_id: promptId,
-        });
+        }]);
 
       if (error) throw error;
 
@@ -220,7 +220,7 @@ export function useAIPrompts(user: User | null) {
     try {
       console.log('👁️ Showing default prompt:', promptId);
       
-      const { error } = await supabase
+      const { error } = await (supabase as any)
         .from('hidden_prompts')
         .delete()
         .eq('user_id', user.id)
