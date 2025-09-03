@@ -1,9 +1,2 @@
-# Netlify redirects for SPA
-/admin    /index.html   200
-/*        /index.html   200
-
-# Handle API routes if any
-/api/*  /api/:splat  200
-
-# Admin route specifically
-/admin/*  /index.html   200
+# Netlify redirects for SPA (fallback for other platforms)
+/*    /index.html   200

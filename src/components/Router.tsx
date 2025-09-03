@@ -12,6 +12,12 @@ export function Router() {
 
   useEffect(() => {
     console.log('🔐 Router: Auth effect triggered');
+    
+    // Log current path for debugging
+    console.log('🌐 Current path:', window.location.pathname);
+    console.log('🌐 Current search:', window.location.search);
+    console.log('🌐 Current hash:', window.location.hash);
+    
     // Obtener usuario actual
     const getUser = async () => {
       try {
@@ -55,6 +61,7 @@ export function Router() {
 
   const navigateTo = (path: string) => {
     console.log('🧭 Navigating to:', path);
+    console.log('🌐 From:', window.location.pathname, 'To:', path);
     window.history.pushState({}, '', path);
     setCurrentPath(path);
   };
@@ -80,12 +87,22 @@ export function Router() {
 
   console.log('🎯 Routing decision:', {
     currentPath,
+    windowPath: window.location.pathname,
     user: user.email,
     isAdminEmail: ['2dcommx02@gmail.com', '2dcommx01@gmail.com'].includes(user.email || '')
   });
 
+  // Ensure currentPath matches actual window location
+  if (currentPath !== window.location.pathname) {
+    console.log('🔄 Path mismatch detected, syncing:', {
+      currentPath,
+      windowPath: window.location.pathname
+    });
+    setCurrentPath(window.location.pathname);
+  }
+
   // Routing simple
-  if (currentPath === '/admin') {
+  if (currentPath === '/admin' || window.location.pathname === '/admin') {
     console.log('🏛️ Rendering AdminPage');
     return <AdminPage user={user} onGoHome={goHome} />;
   }
