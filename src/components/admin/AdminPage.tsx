@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
-import { Shield, Users, FileText, Folder, Sparkles, Activity, UserPlus, Search, ArrowLeft, Home } from 'lucide-react';
+import { Shield, Users, FileText, Folder, Sparkles, Activity, UserPlus, Search, ArrowLeft, Home, User } from 'lucide-react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../../lib/supabase';
 import { UserStats, DashboardStats } from '../../types/admin';
 import { AdminStats } from './AdminStats';
 import { UsersList } from './UsersList';
 import { AddAdminModal } from './AddAdminModal';
+import { AddUserModal } from './AddUserModal';
 
 interface AdminPageProps {
   user: User;
@@ -19,6 +20,7 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
   const [dashboardStats, setDashboardStats] = useState<DashboardStats | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [showAddAdmin, setShowAddAdmin] = useState(false);
+  const [showAddUser, setShowAddUser] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -164,6 +166,45 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
     }
   };
 
+  const addUser = async (email: string, password: string) => {
+    try {
+      console.log('➕ Creating new user:', email);
+      
+      // Crear usuario usando Supabase Auth
+      const { data, error } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true, // Auto-confirmar email
+      });
+
+      if (error) {
+        if (error.message.includes('User already registered')) {
+          throw new Error('Este email ya está registrado');
+        }
+        throw error;
+      }
+
+      // Crear entrada en la tabla users
+      const { error: userError } = await (supabase as any)
+        .from('users')
+        .insert({
+          id: data.user.id,
+          email: data.user.email,
+        });
+
+      if (userError && userError.code !== '23505') { // Ignorar error de duplicado
+        console.error('Error creating user record:', userError);
+      }
+
+      await loadAdminData(); // Recargar datos
+      console.log('✅ User created successfully');
+      return true;
+    } catch (error) {
+      console.error('❌ Error creating user:', error);
+      throw error;
+    }
+  };
+
   const removeAdmin = async (userId: string) => {
     try {
       console.log('➖ Removing admin:', userId);
@@ -272,13 +313,22 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
               <div className="text-sm text-app-secondary">
                 Administrador: <span className="font-medium text-app-primary">{user.email}</span>
               </div>
-              <button
-                onClick={() => setShowAddAdmin(true)}
-                className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
-              >
-                <UserPlus className="w-4 h-4" />
-                Agregar Admin
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setShowAddUser(true)}
+                  className="flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <User className="w-4 h-4" />
+                  Crear Usuario
+                </button>
+                <button
+                  onClick={() => setShowAddAdmin(true)}
+                  className="flex items-center gap-2 bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg font-medium transition-colors"
+                >
+                  <UserPlus className="w-4 h-4" />
+                  Agregar Admin
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -328,6 +378,14 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
         <AddAdminModal
           onClose={() => setShowAddAdmin(false)}
           onAddAdmin={addAdmin}
+        />
+      )}
+
+      {/* Modal para crear usuario normal */}
+      {showAddUser && (
+        <AddUserModal
+          onClose={() => setShowAddUser(false)}
+          onAddUser={addUser}
         />
       )}
     </div>
