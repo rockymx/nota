@@ -84,7 +84,7 @@ export function Sidebar({
               }`}
             >
               <Folder className="w-4 h-4" />
-              Carpetas
+              Notas
             </button>
             <button
               onClick={() => setActiveView('calendar')}
