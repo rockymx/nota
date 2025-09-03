@@ -1,8 +1,10 @@
 import { Folder, Trash2, Hash } from 'lucide-react';
 import { Folder as FolderType } from '../types';
+import { DeleteFolderModal } from './DeleteFolderModal';
 
 interface FolderListProps {
   folders: FolderType[];
+  notes: any[];
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
   onDeleteFolder: (id: string) => void;
@@ -10,12 +12,31 @@ interface FolderListProps {
 
 export function FolderList({
   folders,
+  notes,
   selectedFolderId,
   onFolderSelect,
   onDeleteFolder,
 }: FolderListProps) {
+  const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
+
+  const handleDeleteClick = (folder: FolderType) => {
+    setFolderToDelete(folder);
+  };
+
+  const handleConfirmDelete = () => {
+    if (folderToDelete) {
+      onDeleteFolder(folderToDelete.id);
+      setFolderToDelete(null);
+    }
+  };
+
+  const getNotesCountInFolder = (folderId: string) => {
+    return notes.filter(note => note.folderId === folderId).length;
+  };
+
   return (
-    <div className="space-y-2">
+    <>
+      <div className="space-y-2">
       {/* All Notes */}
       <button
         onClick={() => onFolderSelect(null)}
@@ -56,7 +77,7 @@ export function FolderList({
             </span>
           </button>
           <button
-            onClick={() => onDeleteFolder(folder.id)}
+            onClick={() => handleDeleteClick(folder)}
             className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group"
           >
             <Trash2 className="w-4 h-4 text-app-tertiary group-hover:text-red-500" />
@@ -70,6 +91,17 @@ export function FolderList({
           <p className="text-sm">No hay carpetas creadas</p>
         </div>
       )}
-    </div>
+      </div>
+
+      {/* Modal de confirmación para eliminar carpeta */}
+      {folderToDelete && (
+        <DeleteFolderModal
+          folder={folderToDelete}
+          notesCount={getNotesCountInFolder(folderToDelete.id)}
+          onClose={() => setFolderToDelete(null)}
+          onConfirm={handleConfirmDelete}
+        />
+      )}
+    </>
   );
 }

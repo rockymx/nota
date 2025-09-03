@@ -118,6 +118,7 @@ export function Sidebar({
                 </div>
                 <FolderList
                   folders={folders}
+                  notes={notes}
                   selectedFolderId={selectedFolderId}
                   onFolderSelect={onFolderSelect}
                   onDeleteFolder={onDeleteFolder}
