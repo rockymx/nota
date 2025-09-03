@@ -43,67 +43,70 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
       document.body.removeChild(textArea);
     }
   };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-4">
-      <div className="bg-app shadow-xl w-full max-w-2xl transition-colors duration-300 border border-app
-                      fixed md:relative inset-0 md:inset-auto md:rounded-xl md:max-h-[90vh] 
-                      flex flex-col h-full md:h-auto md:overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-app flex-shrink-0">
-          <h2 className="text-xl font-semibold text-app-primary flex-1 pr-4">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      {/* Modal container - Full screen on mobile, centered on desktop */}
+      <div className="w-full h-full md:w-full md:max-w-2xl md:h-auto md:max-h-[90vh] bg-app shadow-xl border border-app md:rounded-xl flex flex-col transition-colors duration-300">
+        
+        {/* Header - Fixed at top */}
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-app bg-app flex-shrink-0">
+          <h2 className="text-lg md:text-xl font-semibold text-app-primary flex-1 pr-4 line-clamp-2">
             {note.title}
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 md:gap-2 flex-shrink-0">
             <button
               onClick={handleCopyContent}
               data-copy-button
               className="p-2 rounded-lg hover:bg-green-50 dark:hover:bg-green-900/30 text-green-600 dark:text-green-400 transition-colors"
               title="Copiar contenido"
             >
-              <Copy className="w-5 h-5" />
+              <Copy className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <button
               onClick={handleEdit}
               className="p-2 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/30 text-blue-600 dark:text-blue-400 transition-colors"
               title="Editar nota"
             >
-              <Edit3 className="w-5 h-5" />
+              <Edit3 className="w-4 h-4 md:w-5 md:h-5" />
             </button>
             <button
               onClick={onClose}
               className="p-2 rounded-lg hover:bg-app-secondary transition-colors"
             >
-              <X className="w-5 h-5 text-app-secondary" />
+              <X className="w-4 h-4 md:w-5 md:h-5 text-app-secondary" />
             </button>
           </div>
         </div>
 
-        {/* Content */}
-        <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
-          {note.content ? (
-            <MarkdownRenderer content={note.content} />
-          ) : (
-            <p className="text-app-tertiary italic">Esta nota no tiene contenido...</p>
-          )}
+        {/* Content area - Scrollable */}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <div className="p-4 md:p-6">
+            {note.content ? (
+              <MarkdownRenderer content={note.content} />
+            ) : (
+              <p className="text-app-tertiary italic">Esta nota no tiene contenido...</p>
+            )}
+          </div>
         </div>
 
-        {/* Footer with metadata */}
+        {/* Footer - Fixed at bottom */}
         <div className="p-4 md:p-6 border-t border-app bg-app-secondary flex-shrink-0">
-          <div className="flex items-center justify-between text-sm text-app-secondary">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-sm text-app-secondary">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
               {folder && (
                 <div className="flex items-center gap-2">
                   <div
-                    className="w-3 h-3 rounded-full"
+                    className="w-3 h-3 rounded-full flex-shrink-0"
                     style={{ backgroundColor: folder.color }}
                   />
-                  <Folder className="w-4 h-4" />
-                  <span>{folder.name}</span>
+                  <Folder className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate">{folder.name}</span>
                 </div>
               )}
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                <span>
+                <Calendar className="w-4 h-4 flex-shrink-0" />
+                <span className="text-xs sm:text-sm">
                   Creada: {format(new Date(note.createdAt), 'dd MMM yyyy', { locale: es })}
                 </span>
               </div>
