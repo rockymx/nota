@@ -20,10 +20,10 @@ console.log('🔍 Environment check in App:', {
 });
 
 interface AppProps {
-  onGoToAdmin: () => void;
+  onGoToAdmin?: () => void;
 }
 
-function App({ onGoToAdmin }: AppProps) {
+function App({ onGoToAdmin }: AppProps = {}) {
   console.log('🔧 App component function executing...');
   console.log('🔍 Runtime environment check:', {
     userAgent: navigator.userAgent,
@@ -202,7 +202,7 @@ function App({ onGoToAdmin }: AppProps) {
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}
-        onShowAdmin={user.email === '2dcommx02@gmail.com' ? onGoToAdmin : undefined}
+        onShowAdmin={onGoToAdmin}
       />
 
       {/* Contenido principal */}

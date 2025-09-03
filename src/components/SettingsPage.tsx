@@ -247,6 +247,17 @@ export function SettingsPage({
             <div>
               <h3 className="text-md font-medium text-app-primary mb-3">Acciones de cuenta</h3>
               <div className="space-y-3">
+                {user.email === '2dcommx02@gmail.com' && (
+                  <a
+                    href="/admin"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
+                  >
+                    <div className="w-4 h-4 bg-white rounded flex items-center justify-center">
+                      <span className="text-purple-500 text-xs font-bold">A</span>
+                    </div>
+                    Panel de Administrador
+                  </a>
+                )}
                 <button
                   onClick={() => auth.signOut()}
                   className="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg font-medium transition-colors"
