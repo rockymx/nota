@@ -1,7 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import './index.css'
-import App from './App.tsx'
+import { Router } from './components/Router'
 
 // Production deployment debugging
 console.log('🚀 Starting NotesApp...');
@@ -36,7 +36,7 @@ try {
   console.log('🎯 Rendering App component...');
   root.render(
     <StrictMode>
-      <App />
+      <Router />
     </StrictMode>,
   );
   console.log('✅ App component rendered successfully');

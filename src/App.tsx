@@ -3,13 +3,10 @@ import { Menu, Plus } from 'lucide-react';
 // Componentes principales de la aplicación
 import { Sidebar } from './components/Sidebar';
 import { NotesList } from './components/NotesList';
-import { NoteEditor } from './components/NoteEditor';
 import { NoteModal } from './components/NoteModal';
-import { AuthForm } from './components/AuthForm';
 import { SettingsPage } from './components/SettingsPage';
 import { AdminSetup } from './components/AdminSetup';
 // Hook personalizado para manejar notas con Supabase
-import { useSupabaseNotes } from './hooks/useSupabaseNotes';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
@@ -22,7 +19,11 @@ console.log('🔍 Environment check in App:', {
   baseUrl: import.meta.env.BASE_URL
 });
 
-function App() {
+interface AppProps {
+  onGoToAdmin: () => void;
+}
+
+function App({ onGoToAdmin }: AppProps) {
   console.log('🔧 App component function executing...');
   console.log('🔍 Runtime environment check:', {
     userAgent: navigator.userAgent,
@@ -36,8 +37,6 @@ function App() {
   const [showEditor, setShowEditor] = useState(false);
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [showSettings, setShowSettings] = useState(false);
-  
-  const [showAdminDashboard, setShowAdminDashboard] = useState(false);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
   console.log('🎛️ App state initialized');
   
@@ -92,31 +91,10 @@ function App() {
     showDefaultPrompt,
   } = useAIPrompts(user);
 
-  // Hook para funciones de administrador
-  const {
-    isAdmin,
-    loading: adminLoading,
-    userStats,
-    dashboardStats,
-    addAdmin,
-    removeAdmin,
-    toggleUserStatus,
-  } = useAdminUsers(user);
-
   console.log('🧠 AI Prompts state:', {
     promptsCount: aiPrompts.length,
     hiddenCount: hiddenPromptIds.size
   });
-
-  // Verificar si necesitamos mostrar setup de admin
-  useEffect(() => {
-    if (user && user.email === '2dcommx02@gmail.com' && !adminLoading) {
-      // Solo mostrar setup si no es admin aún
-      if (!isAdmin) {
-        setShowAdminSetup(true);
-      }
-    }
-  }, [user, isAdmin, adminLoading]);
 
   // Función para crear una nueva nota
   const handleCreateNote = () => {
@@ -177,12 +155,6 @@ function App() {
     );
   }
 
-  // Mostrar formulario de autenticación si no está logueado
-  if (!user) {
-    console.log('🔐 Rendering auth form (user not authenticated)');
-    return <AuthForm onSuccess={() => {}} />;
-  }
-
   console.log('🎨 Rendering main app interface for authenticated user');
   
   // Obtener notas filtradas según carpeta y fecha seleccionada
@@ -230,7 +202,7 @@ function App() {
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}
-        onShowAdmin={isAdmin ? () => setShowAdminDashboard(true) : undefined}
+        onShowAdmin={user.email === '2dcommx02@gmail.com' ? onGoToAdmin : undefined}
       />
 
       {/* Contenido principal */}
@@ -276,16 +248,6 @@ function App() {
               onHideDefaultPrompt={hideDefaultPrompt}
               onShowDefaultPrompt={showDefaultPrompt}
             />
-          ) : showAdminDashboard ? (
-            <AdminDashboard
-              user={user}
-              userStats={userStats}
-              dashboardStats={dashboardStats}
-              onBack={() => setShowAdminDashboard(false)}
-              onAddAdmin={addAdmin}
-              onRemoveAdmin={removeAdmin}
-              onToggleUserStatus={toggleUserStatus}
-            />
           ) : (
             <NotesList
               notes={filteredNotes}
@@ -305,14 +267,6 @@ function App() {
           folders={folders}
           onClose={() => setViewingNote(null)}
           onEdit={handleEditNote}
-        />
-      )}
-
-      {/* Modal de configuración de administrador */}
-      {showAdminSetup && (
-        <AdminSetup
-          user={user}
-          onComplete={() => setShowAdminSetup(false)}
         />
       )}
     </div>
