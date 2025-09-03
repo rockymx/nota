@@ -180,8 +180,28 @@ function App() {
         folders={folders}
         selectedFolderId={selectedFolderId}
         selectedDate={selectedDate}
-        onFolderSelect={setSelectedFolderId}
-        onDateSelect={setSelectedDate}
+        onFolderSelect={(folderId) => {
+          setSelectedFolderId(folderId);
+          // Si estamos en configuración, volver a la vista principal
+          if (showSettings) {
+            setShowSettings(false);
+          }
+          // Cerrar sidebar en móvil después de seleccionar
+          if (window.innerWidth < 1024) {
+            setSidebarOpen(false);
+          }
+        }}
+        onDateSelect={(date) => {
+          setSelectedDate(date);
+          // Si estamos en configuración, volver a la vista principal
+          if (showSettings) {
+            setShowSettings(false);
+          }
+          // Cerrar sidebar en móvil después de seleccionar
+          if (window.innerWidth < 1024) {
+            setSidebarOpen(false);
+          }
+        }}
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}
