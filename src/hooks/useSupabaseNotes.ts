@@ -135,7 +135,7 @@ export function useSupabaseNotes() {
 
       console.log('📁 Loading folders from Supabase...');
       // Cargar carpetas
-      const foldersResult = await (supabase as any)
+      const foldersQuery = (supabase as any)
         .from('folders')
         .select('*')
         .eq('user_id', user.id)
@@ -145,7 +145,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Folders request timeout')), 10000)
       );
       
-      const { data: foldersData, error: foldersError } = await Promise.race([foldersPromise, foldersTimeoutPromise]) as any;
+      const { data: foldersData, error: foldersError } = await Promise.race([foldersQuery, foldersTimeoutPromise]) as any;
 
       if (foldersError) {
         console.error('❌ Folders loading error:', {
@@ -170,7 +170,7 @@ export function useSupabaseNotes() {
 
       console.log('📝 Loading notes from Supabase...');
       // Cargar notas
-      const notesResult = await (supabase as any)
+      const notesQuery = (supabase as any)
         .from('notes')
         .select('*')
         .eq('user_id', user.id)
@@ -180,7 +180,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Notes request timeout')), 10000)
       );
       
-      const { data: notesData, error: notesError } = await Promise.race([notesPromise, notesTimeoutPromise]) as any;
+      const { data: notesData, error: notesError } = await Promise.race([notesQuery, notesTimeoutPromise]) as any;
 
       if (notesError) {
         console.error('❌ Notes loading error:', {
@@ -264,13 +264,13 @@ export function useSupabaseNotes() {
     try {
       console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
-      const { data, error } = await (supabase as any)
+      const insertQuery = (supabase as any)
         .from('folders')
-        .insert([{
+        .insert({
           name,
           color,
           user_id: user.id,
-        }])
+        })
         .select('*')
         .single();
 
@@ -278,7 +278,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
+      const { data, error } = await Promise.race([insertQuery, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -347,14 +347,14 @@ export function useSupabaseNotes() {
       });
       
       // Usar timeout para evitar que se cuelgue
-      const { data, error } = await (supabase as any)
+      const insertQuery = (supabase as any)
         .from('notes')
-        .insert([{
+        .insert({
           title,
           content,
           folder_id: folderId,
           user_id: user.id,
-        }])
+        })
         .select('*')
         .single();
 
@@ -362,7 +362,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise]) as any;
+      const { data, error } = await Promise.race([insertQuery, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -443,12 +443,12 @@ export function useSupabaseNotes() {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const { error } = await (supabase as any)
+      const updateQuery = (supabase as any)
         .from('notes')
-        .update([{
+        .update({
           ...supabaseUpdates,
           updated_at: new Date().toISOString(),
-        }])
+        })
         .eq('id', id)
         .eq('user_id', user.id);
 
@@ -456,7 +456,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { error } = await Promise.race([updatePromise, timeoutPromise]) as any;
+      const { error } = await Promise.race([updateQuery, timeoutPromise]) as any;
 
       if (error) throw error;
 
@@ -504,7 +504,7 @@ export function useSupabaseNotes() {
     try {
       console.log('🗑️ deleteNote called:', { noteId: id, userId: user.id });
       
-      const { error } = await (supabase as any)
+      const deleteQuery = (supabase as any)
         .from('notes')
         .delete()
         .eq('id', id)
@@ -514,7 +514,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
+      const { error } = await Promise.race([deleteQuery, timeoutPromise]) as any;
 
       setNotes(prev => prev.filter(note => note.id !== id));
       console.log('✅ Note deleted successfully:', id);
@@ -553,20 +553,20 @@ export function useSupabaseNotes() {
       console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
       
       // Primero, actualizar notas para remover la asociación con la carpeta
-      await (supabase as any)
+      const updateNotesQuery = (supabase as any)
         .from('notes')
-        .update([{ folder_id: null }])
+        .update({ folder_id: null })
         .eq('folder_id', id)
         .eq('user_id', user.id);
 
       const timeoutPromise1 = new Promise((_, reject) => 
-      const { error } = await (supabase as any)
+        setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { error: moveError } = await Promise.race([updateNotesPromise, timeoutPromise1]) as any;
+      const { error: moveError } = await Promise.race([updateNotesQuery, timeoutPromise1]) as any;
 
       // Luego, eliminar la carpeta
-      const deleteFolderPromise = supabase
+      const deleteFolderQuery = (supabase as any)
         .from('folders')
         .delete()
         .eq('id', id)
@@ -576,7 +576,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      const { error } = await Promise.race([deleteFolderPromise, timeoutPromise2]) as any;
+      const { error } = await Promise.race([deleteFolderQuery, timeoutPromise2]) as any;
 
       // Actualizar estado local
       setFolders(prev => prev.filter(folder => folder.id !== id));
