@@ -237,7 +237,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
             />
           ) : showSettings ? (
             <SettingsPage
-              user={user}
+              user={user!}
               onBack={() => setShowSettings(false)}
               totalNotes={notes.length}
               totalFolders={folders.length}
