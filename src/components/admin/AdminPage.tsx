@@ -170,30 +170,26 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
     try {
       console.log('➕ Creating new user:', email);
       
-      // Crear usuario usando Supabase Auth
-      const { data, error } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: true, // Auto-confirmar email
+      // Get current session for authorization
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('No hay sesión activa');
+      }
+
+      // Call Edge Function to create user securely
+      const { data, error } = await supabase.functions.invoke('admin-create-user', {
+        body: { email, password },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) {
-        if (error.message.includes('User already registered')) {
-          throw new Error('Este email ya está registrado');
-        }
         throw error;
       }
 
-      // Crear entrada en la tabla users
-      const { error: userError } = await (supabase as any)
-        .from('users')
-        .insert({
-          id: data.user.id,
-          email: data.user.email,
-        });
-
-      if (userError && userError.code !== '23505') { // Ignorar error de duplicado
-        console.error('Error creating user record:', userError);
+      if (!data.success) {
+        throw new Error(data.error || 'Error creating user');
       }
 
       await loadAdminData(); // Recargar datos
