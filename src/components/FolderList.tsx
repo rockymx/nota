@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Folder, Trash2, Hash } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { DeleteFolderModal } from './DeleteFolderModal';
