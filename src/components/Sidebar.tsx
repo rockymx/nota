@@ -13,6 +13,7 @@ interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
   folders: FolderType[];
+  notes: Note[];
   selectedFolderId: string | null;
   selectedDate: Date | null;
   onFolderSelect: (folderId: string | null) => void;
@@ -26,6 +27,7 @@ export function Sidebar({
   isOpen,
   onToggle,
   folders,
+  notes,
   selectedFolderId,
   selectedDate,
   onFolderSelect,
