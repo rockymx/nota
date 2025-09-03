@@ -7,6 +7,7 @@ import { NoteEditor } from './components/NoteEditor';
 import { NoteModal } from './components/NoteModal';
 import { AuthForm } from './components/AuthForm';
 import { SettingsPage } from './components/SettingsPage';
+import { AdminSetup } from './components/AdminSetup';
 // Hook personalizado para manejar notas con Supabase
 import { useSupabaseNotes } from './hooks/useSupabaseNotes';
 import { useAIPrompts } from './hooks/useAIPrompts';
@@ -38,6 +39,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showAdminSetup, setShowAdminSetup] = useState(false);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
   console.log('🎛️ App state initialized');
   
@@ -107,6 +109,16 @@ function App() {
     promptsCount: aiPrompts.length,
     hiddenCount: hiddenPromptIds.size
   });
+
+  // Verificar si necesitamos mostrar setup de admin
+  useEffect(() => {
+    if (user && user.email === '2dcommx02@gmail.com' && !adminLoading) {
+      // Solo mostrar setup si no es admin aún
+      if (!isAdmin) {
+        setShowAdminSetup(true);
+      }
+    }
+  }, [user, isAdmin, adminLoading]);
 
   // Verificar si necesitamos mostrar setup de admin
   useEffect(() => {
@@ -308,6 +320,13 @@ function App() {
         />
       )}
 
+      {/* Modal de configuración de administrador */}
+      {showAdminSetup && (
+        <AdminSetup
+          user={user}
+          onComplete={() => setShowAdminSetup(false)}
+        />
+      )}
       {/* Modal de configuración de administrador */}
       {showAdminSetup && (
         <AdminSetup
