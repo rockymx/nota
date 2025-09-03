@@ -178,6 +178,7 @@ function App() {
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
         folders={folders}
+        notes={notes}
         selectedFolderId={selectedFolderId}
         selectedDate={selectedDate}
         onFolderSelect={(folderId) => {

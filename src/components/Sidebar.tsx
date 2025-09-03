@@ -3,7 +3,7 @@ import { X, Plus, Calendar, Folder, Settings } from 'lucide-react';
 import { FolderList } from './FolderList';
 import { CalendarView } from './CalendarView';
 import { CreateFolderModal } from './CreateFolderModal';
-import { Folder as FolderType } from '../types';
+import { Folder as FolderType, Note } from '../types';
 
 /**
  * Componente de barra lateral
@@ -127,6 +127,7 @@ export function Sidebar({
                 <CalendarView
                   selectedDate={selectedDate}
                   onDateSelect={onDateSelect}
+                  notes={notes}
                 />
               </>
             )}

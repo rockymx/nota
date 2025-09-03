@@ -2,18 +2,28 @@ import { useState } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Note } from '../types';
 
 interface CalendarViewProps {
   selectedDate: Date | null;
   onDateSelect: (date: Date | null) => void;
+  notes: Note[];
 }
 
-export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) {
+export function CalendarView({ selectedDate, onDateSelect, notes }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
   const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+
+  // Función para verificar si hay notas en un día específico
+  const hasNotesOnDay = (date: Date) => {
+    const dateStr = date.toDateString();
+    return notes.some(note => 
+      new Date(note.createdAt).toDateString() === dateStr
+    );
+  };
 
   const previousMonth = () => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
@@ -66,13 +76,14 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
         {days.map((day) => {
           const isSelected = selectedDate && isSameDay(day, selectedDate);
           const isTodayDate = isToday(day);
+          const hasNotes = hasNotesOnDay(day);
 
           return (
             <button
               key={day.toISOString()}
               onClick={() => handleDateClick(day)}
               className={`
-                aspect-square flex items-center justify-center text-sm rounded-lg transition-colors
+                aspect-square flex flex-col items-center justify-center text-sm rounded-lg transition-colors relative
                 ${isSelected 
                   ? 'bg-blue-500 text-white' 
                   : isTodayDate
@@ -81,7 +92,18 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
                 }
               `}
             >
-              {format(day, 'd')}
+              <span className="leading-none">
+                {format(day, 'd')}
+              </span>
+              {hasNotes && (
+                <div className={`w-1.5 h-1.5 rounded-full mt-0.5 ${
+                  isSelected 
+                    ? 'bg-white' 
+                    : isTodayDate
+                    ? 'bg-blue-600 dark:bg-blue-400'
+                    : 'bg-blue-500'
+                }`} />
+              )}
             </button>
           );
         })}
