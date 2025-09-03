@@ -264,7 +264,7 @@ export function useSupabaseNotes() {
     try {
       console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
-      const { data, error } = await supabase
+      const insertPromise = supabase
         .from('folders')
         .insert({
           name,
@@ -347,7 +347,7 @@ export function useSupabaseNotes() {
       });
       
       // Usar timeout para evitar que se cuelgue
-      const { data, error } = await supabase
+      const insertPromise = supabase
         .from('notes')
         .insert({
           title,
@@ -443,7 +443,7 @@ export function useSupabaseNotes() {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const { error } = await supabase
+      const updatePromise = supabase
         .from('notes')
         .update({
           ...supabaseUpdates,
@@ -504,7 +504,7 @@ export function useSupabaseNotes() {
     try {
       console.log('🗑️ deleteNote called:', { noteId: id, userId: user.id });
       
-      const { error } = await supabase
+      const deletePromise = supabase
         .from('notes')
         .delete()
         .eq('id', id)
@@ -514,7 +514,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      await Promise.race([deletePromise, timeoutPromise]);
+      const { error } = await Promise.race([deletePromise, timeoutPromise]) as any;
 
       setNotes(prev => prev.filter(note => note.id !== id));
       console.log('✅ Note deleted successfully:', id);
@@ -553,7 +553,7 @@ export function useSupabaseNotes() {
       console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
       
       // Primero, actualizar notas para remover la asociación con la carpeta
-      const { error: moveError } = await supabase
+      const updateNotesPromise = supabase
         .from('notes')
         .update({ folder_id: null } as any)
         .eq('folder_id', id)
@@ -563,10 +563,10 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      await Promise.race([updateNotesPromise, timeoutPromise1]);
+      const { error: moveError } = await Promise.race([updateNotesPromise, timeoutPromise1]) as any;
 
       // Luego, eliminar la carpeta
-      const { error } = await supabase
+      const deleteFolderPromise = supabase
         .from('folders')
         .delete()
         .eq('id', id)
@@ -576,7 +576,7 @@ export function useSupabaseNotes() {
         setTimeout(() => reject(new Error('Request timeout')), 10000)
       );
 
-      await Promise.race([deleteFolderPromise, timeoutPromise2]);
+      const { error } = await Promise.race([deleteFolderPromise, timeoutPromise2]) as any;
 
       // Actualizar estado local
       setFolders(prev => prev.filter(folder => folder.id !== id));
