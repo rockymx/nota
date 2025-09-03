@@ -13,7 +13,6 @@ import { useSupabaseNotes } from './hooks/useSupabaseNotes';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
-import { AdminSetup } from './components/AdminSetup';
 
 console.log('📱 App component module loading...');
 console.log('🔍 Environment check in App:', {
@@ -39,7 +38,6 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
-  const [showAdminSetup, setShowAdminSetup] = useState(false);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
   console.log('🎛️ App state initialized');
   
@@ -109,16 +107,6 @@ function App() {
     promptsCount: aiPrompts.length,
     hiddenCount: hiddenPromptIds.size
   });
-
-  // Verificar si necesitamos mostrar setup de admin
-  useEffect(() => {
-    if (user && user.email === '2dcommx02@gmail.com' && !adminLoading) {
-      // Solo mostrar setup si no es admin aún
-      if (!isAdmin) {
-        setShowAdminSetup(true);
-      }
-    }
-  }, [user, isAdmin, adminLoading]);
 
   // Verificar si necesitamos mostrar setup de admin
   useEffect(() => {
@@ -320,13 +308,6 @@ function App() {
         />
       )}
 
-      {/* Modal de configuración de administrador */}
-      {showAdminSetup && (
-        <AdminSetup
-          user={user}
-          onComplete={() => setShowAdminSetup(false)}
-        />
-      )}
       {/* Modal de configuración de administrador */}
       {showAdminSetup && (
         <AdminSetup
