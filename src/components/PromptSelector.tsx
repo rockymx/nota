@@ -45,7 +45,7 @@ export function PromptSelector({ prompts, onSelectPrompt, loading = false, disab
       <button
         onClick={() => setIsOpen(!isOpen)}
         disabled={disabled || loading}
-        className="flex items-center gap-2 p-2 rounded-lg hover:bg-purple-50 text-purple-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        className="flex items-center gap-2 p-2 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/30 text-purple-600 dark:text-purple-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
         title="Seleccionar prompt de IA"
       >
         {loading ? (
@@ -67,18 +67,18 @@ export function PromptSelector({ prompts, onSelectPrompt, loading = false, disab
           />
           
           {/* Dropdown menu */}
-          <div className="absolute top-full right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-gray-200 z-20 max-h-96 overflow-y-auto">
-            <div className="p-3 border-b border-gray-200">
+          <div className="absolute top-full right-0 mt-2 w-80 bg-app rounded-lg shadow-app-lg border border-app z-20 max-h-96 overflow-y-auto">
+            <div className="p-3 border-b border-app">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-purple-600" />
-                <span className="text-sm font-medium text-gray-900">Prompts de IA</span>
+                <span className="text-sm font-medium text-app-primary">Prompts de IA</span>
               </div>
             </div>
 
             <div className="p-2">
               {categories.map(category => (
                 <div key={category} className="mb-3 last:mb-0">
-                  <div className="px-2 py-1 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <div className="px-2 py-1 text-xs font-medium text-app-tertiary uppercase tracking-wide">
                     {category}
                   </div>
                   <div className="space-y-1">
@@ -86,12 +86,12 @@ export function PromptSelector({ prompts, onSelectPrompt, loading = false, disab
                       <button
                         key={prompt.id}
                         onClick={() => handleSelectPrompt(prompt)}
-                        className="w-full text-left p-3 rounded-lg hover:bg-gray-50 transition-colors group"
+                        className="w-full text-left p-3 rounded-lg hover:bg-app-secondary transition-colors group"
                       >
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-sm font-medium text-gray-900">
+                              <span className="text-sm font-medium text-app-primary">
                                 {prompt.name}
                               </span>
                               {prompt.isDefault && (
@@ -100,7 +100,7 @@ export function PromptSelector({ prompts, onSelectPrompt, loading = false, disab
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-600 mt-1 line-clamp-2">
+                            <p className="text-xs text-app-secondary mt-1 line-clamp-2">
                               {prompt.description}
                             </p>
                           </div>

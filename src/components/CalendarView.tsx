@@ -32,30 +32,30 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
   };
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-4">
+    <div className="bg-app rounded-lg border border-app p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-4">
         <button
           onClick={previousMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-app-secondary transition-colors"
         >
-          <ChevronLeft className="w-4 h-4" />
+          <ChevronLeft className="w-4 h-4 text-app-secondary" />
         </button>
-        <h3 className="text-sm font-semibold text-gray-900">
+        <h3 className="text-sm font-semibold text-app-primary">
           {format(currentMonth, 'MMMM yyyy', { locale: es })}
         </h3>
         <button
           onClick={nextMonth}
-          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+          className="p-2 rounded-lg hover:bg-app-secondary transition-colors"
         >
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="w-4 h-4 text-app-secondary" />
         </button>
       </div>
 
       {/* Days of week */}
       <div className="grid grid-cols-7 gap-1 mb-2">
         {['L', 'M', 'X', 'J', 'V', 'S', 'D'].map((day) => (
-          <div key={day} className="text-center text-xs font-medium text-gray-500 py-2">
+          <div key={day} className="text-center text-xs font-medium text-app-tertiary py-2">
             {day}
           </div>
         ))}
@@ -74,10 +74,10 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
               className={`
                 aspect-square flex items-center justify-center text-sm rounded-lg transition-colors
                 ${isSelected 
-                  ? 'bg-primary-500 text-white' 
+                  ? 'bg-blue-500 text-white' 
                   : isTodayDate
-                  ? 'bg-primary-100 text-primary-700 font-medium'
-                  : 'hover:bg-gray-100 text-gray-700'
+                  ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                  : 'hover:bg-app-secondary text-app-primary'
                 }
               `}
             >
@@ -91,7 +91,7 @@ export function CalendarView({ selectedDate, onDateSelect }: CalendarViewProps) 
       {selectedDate && (
         <button
           onClick={() => onDateSelect(null)}
-          className="w-full mt-4 text-sm text-gray-500 hover:text-gray-700 transition-colors"
+          className="w-full mt-4 text-sm text-app-secondary hover:text-app-primary transition-colors"
         >
           Limpiar filtro de fecha
         </button>

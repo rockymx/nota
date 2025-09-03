@@ -78,11 +78,13 @@ export function SettingsPage({
   };
 
   const applyTheme = (newTheme: 'light' | 'dark') => {
-    const root = document.documentElement;
+    const body = document.body;
     if (newTheme === 'dark') {
-      root.classList.add('dark');
+      body.classList.add('dark');
+      document.documentElement.classList.add('dark');
     } else {
-      root.classList.remove('dark');
+      body.classList.remove('dark');
+      document.documentElement.classList.remove('dark');
     }
   };
   
@@ -170,25 +172,25 @@ export function SettingsPage({
   ];
 
   return (
-    <div className="h-full bg-white flex flex-col">
+    <div className="h-full bg-app flex flex-col transition-colors duration-300">
       {/* Header */}
-      <div className="border-b border-gray-200 p-6">
+      <div className="border-b border-app p-6">
         <div className="flex items-center gap-4">
           <button
             onClick={onBack}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-app-secondary transition-colors"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-app-secondary" />
           </button>
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Configuración</h1>
-            <p className="text-gray-600">Administra tu cuenta y preferencias</p>
+            <h1 className="text-2xl font-bold text-app-primary">Configuración</h1>
+            <p className="text-app-secondary">Administra tu cuenta y preferencias</p>
           </div>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="border-b border-gray-200">
+      <div className="border-b border-app">
         <div className="flex overflow-x-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
@@ -199,7 +201,7 @@ export function SettingsPage({
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                    : 'border-transparent text-app-secondary hover:text-app-primary'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -215,35 +217,35 @@ export function SettingsPage({
         {activeTab === 'profile' && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Información de la cuenta</h2>
-              <div className="bg-gray-50 rounded-lg p-4 space-y-3">
+              <h2 className="text-lg font-semibold text-app-primary mb-4">Información de la cuenta</h2>
+              <div className="bg-app-secondary rounded-lg p-4 space-y-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-app-primary mb-1">
                     Correo electrónico
                   </label>
                   <input
                     type="email"
                     value={user.email || ''}
                     disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                    className="w-full px-3 py-2 border border-app rounded-lg bg-app-tertiary text-app-secondary"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-app-primary mb-1">
                     ID de usuario
                   </label>
                   <input
                     type="text"
                     value={user.id}
                     disabled
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600 font-mono text-xs"
+                    className="w-full px-3 py-2 border border-app rounded-lg bg-app-tertiary text-app-secondary font-mono text-xs"
                   />
                 </div>
               </div>
             </div>
 
             <div>
-              <h3 className="text-md font-medium text-gray-900 mb-3">Acciones de cuenta</h3>
+              <h3 className="text-md font-medium text-app-primary mb-3">Acciones de cuenta</h3>
               <div className="space-y-3">
                 <button
                   onClick={() => auth.signOut()}
@@ -259,7 +261,7 @@ export function SettingsPage({
         {activeTab === 'ai' && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Configuración de IA</h2>
+              <h2 className="text-lg font-semibold text-app-primary mb-4">Configuración de IA</h2>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <h3 className="font-medium text-blue-900 mb-2">Google Gemini API</h3>
                 <p className="text-sm text-blue-700 mb-3">
@@ -277,7 +279,7 @@ export function SettingsPage({
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-app-primary mb-2">
                     API Key de Gemini
                   </label>
                   <input
@@ -285,7 +287,7 @@ export function SettingsPage({
                     value={apiKey}
                     onChange={(e) => setApiKey(e.target.value)}
                     placeholder="Ingresa tu API key..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors"
+                    className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
                   />
                 </div>
 
@@ -321,8 +323,8 @@ export function SettingsPage({
                 {testResult && (
                   <div className={`p-3 rounded-lg text-sm ${
                     testResult.startsWith('✅') 
-                      ? 'bg-green-50 border border-green-200 text-green-700'
-                      : 'bg-red-50 border border-red-200 text-red-700'
+                      ? 'bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 text-green-700 dark:text-green-300'
+                      : 'bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-700 text-red-700 dark:text-red-300'
                   }`}>
                     {testResult}
                   </div>
@@ -349,14 +351,14 @@ export function SettingsPage({
         {activeTab === 'preferences' && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Preferencias de la aplicación</h2>
+              <h2 className="text-lg font-semibold text-app-primary mb-4">Preferencias de la aplicación</h2>
               
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Apariencia</h3>
+                  <h3 className="text-md font-medium text-app-primary mb-3">Apariencia</h3>
                   <div className="space-y-3">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                      <label className="block text-sm font-medium text-app-primary mb-2">
                         Tema
                       </label>
                       <div className="flex gap-3">
@@ -364,8 +366,8 @@ export function SettingsPage({
                           onClick={() => handleThemeChange('light')}
                           className={`px-4 py-2 rounded-lg border transition-colors ${
                             theme === 'light'
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-300 hover:bg-gray-50'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'border-app hover:bg-app-secondary text-app-primary'
                           }`}
                         >
                           Claro
@@ -374,8 +376,8 @@ export function SettingsPage({
                           onClick={() => handleThemeChange('dark')}
                           className={`px-4 py-2 rounded-lg border transition-colors ${
                             theme === 'dark'
-                              ? 'border-blue-500 bg-blue-50 text-blue-700'
-                              : 'border-gray-300 hover:bg-gray-50'
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                              : 'border-app hover:bg-app-secondary text-app-primary'
                           }`}
                         >
                           Oscuro
@@ -386,7 +388,7 @@ export function SettingsPage({
                 </div>
 
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Editor</h3>
+                  <h3 className="text-md font-medium text-app-primary mb-3">Editor</h3>
                   <div className="space-y-3">
                     <label className="flex items-center gap-3">
                       <input
@@ -395,7 +397,7 @@ export function SettingsPage({
                         onChange={(e) => handleAutoSaveChange(e.target.checked)}
                         className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
-                      <span className="text-sm text-gray-700">Guardado automático</span>
+                      <span className="text-sm text-app-primary">Guardado automático</span>
                     </label>
                   </div>
                 </div>
@@ -407,37 +409,37 @@ export function SettingsPage({
         {activeTab === 'data' && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Gestión de datos</h2>
+              <h2 className="text-lg font-semibold text-app-primary mb-4">Gestión de datos</h2>
               
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Estadísticas</h3>
+                  <h3 className="text-md font-medium text-app-primary mb-3">Estadísticas</h3>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <BarChart3 className="w-5 h-5 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-900">Total de notas</span>
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-300">Total de notas</span>
                       </div>
-                      <p className="text-2xl font-bold text-blue-700">{totalNotes}</p>
+                      <p className="text-2xl font-bold text-blue-700 dark:text-blue-400">{totalNotes}</p>
                     </div>
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                    <div className="bg-green-50 dark:bg-green-900/30 border border-green-200 dark:border-green-700 rounded-lg p-4">
                       <div className="flex items-center gap-2 mb-2">
                         <BarChart3 className="w-5 h-5 text-green-600" />
-                        <span className="text-sm font-medium text-green-900">Total de carpetas</span>
+                        <span className="text-sm font-medium text-green-900 dark:text-green-300">Total de carpetas</span>
                       </div>
-                      <p className="text-2xl font-bold text-green-700">{totalFolders}</p>
+                      <p className="text-2xl font-bold text-green-700 dark:text-green-400">{totalFolders}</p>
                     </div>
                   </div>
                 </div>
 
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Exportar datos</h3>
+                  <h3 className="text-md font-medium text-app-primary mb-3">Exportar datos</h3>
                   <div className="space-y-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-app rounded-lg hover:bg-app-secondary transition-colors text-app-primary">
                       <Download className="w-4 h-4" />
                       Exportar todas las notas (JSON)
                     </button>
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-app rounded-lg hover:bg-app-secondary transition-colors text-app-primary">
                       <Download className="w-4 h-4" />
                       Exportar como Markdown
                     </button>
@@ -445,9 +447,9 @@ export function SettingsPage({
                 </div>
 
                 <div>
-                  <h3 className="text-md font-medium text-gray-900 mb-3">Importar datos</h3>
+                  <h3 className="text-md font-medium text-app-primary mb-3">Importar datos</h3>
                   <div className="space-y-3">
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-app rounded-lg hover:bg-app-secondary transition-colors text-app-primary">
                       <Upload className="w-4 h-4" />
                       Importar notas desde archivo
                     </button>

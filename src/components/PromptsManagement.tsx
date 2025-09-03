@@ -53,8 +53,8 @@ export function PromptsManagement({
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold text-gray-900">Prompts de IA</h3>
-          <p className="text-sm text-gray-600">Gestiona tus prompts personalizados para mejorar notas</p>
+          <h3 className="text-lg font-semibold text-app-primary">Prompts de IA</h3>
+          <p className="text-sm text-app-secondary">Gestiona tus prompts personalizados para mejorar notas</p>
         </div>
         <button
           onClick={() => setShowCreateModal(true)}
@@ -67,16 +67,16 @@ export function PromptsManagement({
 
       {/* Prompts personalizados */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center gap-2">
+        <h4 className="text-md font-medium text-app-primary mb-3 flex items-center gap-2">
           <Sparkles className="w-4 h-4 text-purple-600" />
           Mis Prompts ({customPrompts.length})
         </h4>
         
         {customPrompts.length === 0 ? (
-          <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-            <Sparkles className="w-8 h-8 text-gray-400 mx-auto mb-3" />
-            <h5 className="text-sm font-medium text-gray-900 mb-1">No tienes prompts personalizados</h5>
-            <p className="text-xs text-gray-600 mb-4">Crea tu primer prompt para personalizar las funciones de IA</p>
+          <div className="bg-app-secondary border-2 border-dashed border-app rounded-lg p-8 text-center">
+            <Sparkles className="w-8 h-8 text-app-tertiary mx-auto mb-3" />
+            <h5 className="text-sm font-medium text-app-primary mb-1">No tienes prompts personalizados</h5>
+            <p className="text-xs text-app-secondary mb-4">Crea tu primer prompt para personalizar las funciones de IA</p>
             <button
               onClick={() => setShowCreateModal(true)}
               className="text-sm text-purple-600 hover:text-purple-700 font-medium"
@@ -87,18 +87,18 @@ export function PromptsManagement({
         ) : (
           <div className="grid gap-3">
             {customPrompts.map(prompt => (
-              <div key={prompt.id} className="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-sm transition-shadow">
+              <div key={prompt.id} className="bg-app border border-app rounded-lg p-4 hover:shadow-app-sm transition-shadow">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-2">
-                      <h5 className="font-medium text-gray-900">{prompt.name}</h5>
+                      <h5 className="font-medium text-app-primary">{prompt.name}</h5>
                       <span className="inline-flex items-center gap-1 text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full">
                         <Tag className="w-3 h-3" />
                         {prompt.category}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mb-2">{prompt.description}</p>
-                    <p className="text-xs text-gray-500 line-clamp-2 font-mono bg-gray-50 p-2 rounded">
+                    <p className="text-sm text-app-secondary mb-2">{prompt.description}</p>
+                    <p className="text-xs text-app-tertiary line-clamp-2 font-mono bg-app-secondary p-2 rounded">
                       {prompt.promptTemplate}
                     </p>
                   </div>
@@ -127,7 +127,7 @@ export function PromptsManagement({
 
       {/* Prompts por defecto */}
       <div>
-        <h4 className="text-md font-medium text-gray-900 mb-3 flex items-center gap-2">
+        <h4 className="text-md font-medium text-app-primary mb-3 flex items-center gap-2">
           <Tag className="w-4 h-4 text-blue-600" />
           Prompts por Defecto ({defaultPrompts.length})
         </h4>
@@ -136,14 +136,14 @@ export function PromptsManagement({
           {defaultPrompts.map(prompt => (
             <div key={prompt.id} className={`rounded-lg p-4 border transition-colors ${
               hiddenPromptIds.has(prompt.id)
-                ? 'bg-gray-50 border-gray-200 opacity-60'
-                : 'bg-blue-50 border-blue-200'
+                ? 'bg-app-secondary border-app opacity-60'
+                : 'bg-blue-50 dark:bg-blue-900/30 border-blue-200 dark:border-blue-700'
             }`}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-2">
                     <h5 className={`font-medium ${
-                      hiddenPromptIds.has(prompt.id) ? 'text-gray-600' : 'text-blue-900'
+                      hiddenPromptIds.has(prompt.id) ? 'text-app-secondary' : 'text-blue-900 dark:text-blue-300'
                     }`}>
                       {prompt.name}
                     </h5>
@@ -152,13 +152,13 @@ export function PromptsManagement({
                       {prompt.category}
                     </span>
                     {hiddenPromptIds.has(prompt.id) && (
-                      <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">
+                      <span className="text-xs bg-app-tertiary text-app-secondary px-2 py-0.5 rounded-full">
                         Oculto
                       </span>
                     )}
                   </div>
                   <p className={`text-sm ${
-                    hiddenPromptIds.has(prompt.id) ? 'text-gray-500' : 'text-blue-700'
+                    hiddenPromptIds.has(prompt.id) ? 'text-app-tertiary' : 'text-blue-700 dark:text-blue-400'
                   }`}>
                     {prompt.description}
                   </p>
@@ -174,7 +174,7 @@ export function PromptsManagement({
                   ) : (
                     <button
                       onClick={() => onHideDefaultPrompt(prompt.id)}
-                      className="px-3 py-1 text-xs border border-gray-300 text-gray-600 hover:bg-gray-50 rounded-lg transition-colors"
+                      className="px-3 py-1 text-xs border border-app text-app-secondary hover:bg-app-secondary rounded-lg transition-colors"
                     >
                       Ocultar
                     </button>

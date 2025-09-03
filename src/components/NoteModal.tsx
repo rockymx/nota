@@ -22,10 +22,10 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-4">
       <div className="bg-white rounded-xl md:rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] md:max-h-[90vh] overflow-hidden 
-                      fixed md:relative inset-0 md:inset-auto h-full md:h-auto">
+                      fixed md:relative inset-0 md:inset-auto h-full md:h-auto bg-app transition-colors duration-300">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900 flex-1 pr-4">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-app">
+          <h2 className="text-xl font-semibold text-app-primary flex-1 pr-4">
             {note.title}
           </h2>
           <div className="flex items-center gap-2">
@@ -38,9 +38,9 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              className="p-2 rounded-lg hover:bg-app-secondary transition-colors"
             >
-              <X className="w-5 h-5" />
+              <X className="w-5 h-5 text-app-secondary" />
             </button>
           </div>
         </div>
@@ -50,13 +50,13 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
           {note.content ? (
             <MarkdownRenderer content={note.content} />
           ) : (
-            <p className="text-gray-500 italic">Esta nota no tiene contenido...</p>
+            <p className="text-app-secondary italic">Esta nota no tiene contenido...</p>
           )}
         </div>
 
         {/* Footer with metadata */}
-        <div className="p-4 md:p-6 border-t border-gray-200 bg-gray-50">
-          <div className="flex items-center justify-between text-sm text-gray-600">
+        <div className="p-4 md:p-6 border-t border-app bg-app-secondary">
+          <div className="flex items-center justify-between text-sm text-app-secondary">
             <div className="flex items-center gap-4">
               {folder && (
                 <div className="flex items-center gap-2">

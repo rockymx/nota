@@ -172,7 +172,7 @@ function App() {
 
   console.log('🎯 About to render main app JSX...');
   return (
-    <div className="flex h-screen bg-gray-50 dark:bg-gray-900">
+    <div className="flex h-screen bg-app transition-colors duration-300">
       {/* Barra lateral con carpetas y calendario */}
       <Sidebar
         isOpen={sidebarOpen}
@@ -191,11 +191,11 @@ function App() {
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col">
         {/* Área de contenido - Editor o Lista de notas */}
-        <main className="flex-1 overflow-hidden relative">
+        <main className="flex-1 overflow-hidden relative bg-app">
           {/* Botón de menú hamburguesa flotante para móvil */}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-30 p-3 bg-white rounded-lg shadow-lg hover:bg-gray-50 transition-colors lg:hidden"
+            className="fixed top-4 left-4 z-30 p-3 bg-app rounded-lg shadow-app-lg hover:bg-app-secondary transition-all duration-200 lg:hidden border border-app"
           >
             <Menu className="w-5 h-5" />
           </button>
@@ -203,7 +203,7 @@ function App() {
           {/* Botón flotante para crear nueva nota */}
           <button
             onClick={handleCreateNote}
-            className="fixed bottom-6 right-6 z-30 bg-blue-500 hover:bg-blue-600 text-white p-4 rounded-full shadow-lg transition-colors flex items-center gap-2"
+            className="fixed bottom-6 right-6 z-30 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-4 rounded-full shadow-app-lg transition-all duration-200 flex items-center gap-2 hover:scale-105"
           >
             <Plus className="w-6 h-6" />
           </button>

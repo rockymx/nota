@@ -25,9 +25,9 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
   // Mostrar mensaje cuando no hay notas
   if (notes.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full text-gray-500 dark:text-gray-400">
+      <div className="flex flex-col items-center justify-center h-full text-app-secondary">
         <Edit3 className="w-16 h-16 mb-4 opacity-50" />
-        <h3 className="text-lg font-medium mb-2 dark:text-gray-300">No hay notas</h3>
+        <h3 className="text-lg font-medium mb-2 text-app-primary">No hay notas</h3>
         <p className="text-sm text-center max-w-sm">
           Comienza creando tu primera nota. Haz clic en el botón "+" para empezar.
         </p>
@@ -49,7 +49,7 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
           >
             {/* Encabezado de la tarjeta con título y botones */}
             <div className="flex items-start justify-between mb-3">
-              <h3 className="font-semibold text-gray-900 line-clamp-1 flex-1">
+              <h3 className="font-semibold text-app-primary line-clamp-1 flex-1">
                 {note.title}
               </h3>
               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -58,36 +58,36 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
                     e.stopPropagation();
                     onEditNote(note);
                   }}
-                  className="p-1 rounded hover:bg-gray-100 transition-colors"
+                  className="p-1 rounded hover:bg-app-secondary transition-colors"
                 >
-                  <Edit3 className="w-4 h-4 text-gray-500" />
+                  <Edit3 className="w-4 h-4 text-app-secondary" />
                 </button>
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
                     onDeleteNote(note.id);
                   }}
-                  className="p-1 rounded hover:bg-red-100 transition-colors"
+                  className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                 >
-                  <Trash2 className="w-4 h-4 text-gray-500 hover:text-red-500" />
+                  <Trash2 className="w-4 h-4 text-app-secondary hover:text-red-500" />
                 </button>
               </div>
             </div>
 
             {/* Contenido de la nota */}
-            <div className="text-gray-600 text-sm mb-4 leading-relaxed line-clamp-3 overflow-hidden">
+            <div className="text-app-secondary text-sm mb-4 leading-relaxed line-clamp-3 overflow-hidden">
               {note.content ? (
                 <MarkdownRenderer 
                   content={note.content} 
                   className="text-sm [&>*]:mb-1 [&>*:last-child]:mb-0"
                 />
               ) : (
-                <span className="text-gray-400 italic">Sin contenido...</span>
+                <span className="text-app-tertiary italic">Sin contenido...</span>
               )}
             </div>
 
             {/* Información adicional: carpeta y fecha */}
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-xs text-app-tertiary">
               <div className="flex items-center gap-4">
                 {/* Mostrar carpeta si existe */}
                 {folder && (

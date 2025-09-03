@@ -12,18 +12,48 @@
   
   body {
     font-family: 'Inter', system-ui, sans-serif;
-    background-color: #f9fafb;
-    color: #111827;
+    background-color: #ffffff;
+    color: #1f2937;
     line-height: 1.5;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
 
-  .dark body {
-    background-color: #111827;
-    color: #f9fafb;
+  body.dark {
+    background-color: #0f172a;
+    color: #f1f5f9;
+  }
+
+  .dark, .dark * {
+    color-scheme: dark;
+  }
+
+  /* Variables CSS para colores del tema */
+  :root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8fafc;
+    --bg-tertiary: #f1f5f9;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-tertiary: #9ca3af;
+    --border-primary: #e5e7eb;
+    --border-secondary: #d1d5db;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
   }
 
   .dark {
-    color-scheme: dark;
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --text-primary: #f1f5f9;
+    --text-secondary: #cbd5e1;
+    --text-tertiary: #94a3b8;
+    --border-primary: #334155;
+    --border-secondary: #475569;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.4), 0 2px 4px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.5), 0 4px 6px -4px rgb(0 0 0 / 0.5);
   }
 }
 
@@ -33,15 +63,70 @@
   }
 
   .note-card {
-    @apply bg-white rounded-lg border border-gray-200 p-4 shadow-sm hover:shadow-md transition-shadow cursor-pointer;
+    background-color: var(--bg-primary);
+    border: 1px solid var(--border-primary);
+    @apply rounded-lg p-4 cursor-pointer transition-all duration-200;
+    box-shadow: var(--shadow-sm);
+  }
+
+  .note-card:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-1px);
   }
 
   .btn-primary {
-    @apply bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center;
+    @apply bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center;
   }
 
   .btn-secondary {
-    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-lg font-medium transition-colors;
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    @apply hover:bg-gray-200 dark:hover:bg-gray-600 px-4 py-2 rounded-lg font-medium transition-all duration-200;
+  }
+
+  /* Clases utilitarias para modo oscuro */
+  .bg-app {
+    background-color: var(--bg-primary);
+  }
+
+  .bg-app-secondary {
+    background-color: var(--bg-secondary);
+  }
+
+  .bg-app-tertiary {
+    background-color: var(--bg-tertiary);
+  }
+
+  .text-app-primary {
+    color: var(--text-primary);
+  }
+
+  .text-app-secondary {
+    color: var(--text-secondary);
+  }
+
+  .text-app-tertiary {
+    color: var(--text-tertiary);
+  }
+
+  .border-app {
+    border-color: var(--border-primary);
+  }
+
+  .border-app-secondary {
+    border-color: var(--border-secondary);
+  }
+
+  .shadow-app-sm {
+    box-shadow: var(--shadow-sm);
+  }
+
+  .shadow-app-md {
+    box-shadow: var(--shadow-md);
+  }
+
+  .shadow-app-lg {
+    box-shadow: var(--shadow-lg);
   }
 
   .line-clamp-1 {

@@ -21,8 +21,8 @@ export function FolderList({
         onClick={() => onFolderSelect(null)}
         className={`w-full flex items-center gap-3 p-3 rounded-lg transition-colors text-left ${
           selectedFolderId === null
-            ? 'bg-primary-50 text-primary-700 border border-primary-200'
-            : 'hover:bg-gray-50 text-gray-700'
+            ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-700'
+            : 'hover:bg-app-secondary text-app-primary'
         }`}
       >
         <Hash className="w-5 h-5" />
@@ -35,8 +35,8 @@ export function FolderList({
           key={folder.id}
           className={`flex items-center gap-3 p-3 rounded-lg transition-colors ${
             selectedFolderId === folder.id
-              ? 'bg-primary-50 border border-primary-200'
-              : 'hover:bg-gray-50'
+              ? 'bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700'
+              : 'hover:bg-app-secondary'
           }`}
         >
           <button
@@ -50,22 +50,22 @@ export function FolderList({
               <Folder className="w-3 h-3 text-white" />
             </div>
             <span className={`text-sm font-medium ${
-              selectedFolderId === folder.id ? 'text-primary-700' : 'text-gray-700'
+              selectedFolderId === folder.id ? 'text-blue-700 dark:text-blue-300' : 'text-app-primary'
             }`}>
               {folder.name}
             </span>
           </button>
           <button
             onClick={() => onDeleteFolder(folder.id)}
-            className="p-1 rounded hover:bg-red-100 transition-colors group"
+            className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group"
           >
-            <Trash2 className="w-4 h-4 text-gray-400 group-hover:text-red-500" />
+            <Trash2 className="w-4 h-4 text-app-tertiary group-hover:text-red-500" />
           </button>
         </div>
       ))}
 
       {folders.length === 0 && (
-        <div className="text-center py-8 text-gray-500">
+        <div className="text-center py-8 text-app-secondary">
           <Folder className="w-8 h-8 mx-auto mb-2 opacity-50" />
           <p className="text-sm">No hay carpetas creadas</p>
         </div>

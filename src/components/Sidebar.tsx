@@ -59,28 +59,28 @@ export function Sidebar({
 
       {/* Contenedor principal del sidebar */}
       <div className={`
-        fixed top-0 left-0 h-full w-80 bg-white dark:bg-gray-800 shadow-xl z-50 
+        fixed top-0 left-0 h-full w-80 bg-app shadow-app-lg z-50 
         transform transition-transform duration-300 ease-in-out
         ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:relative lg:translate-x-0 lg:shadow-none lg:border-r lg:border-gray-200 dark:lg:border-gray-700
+        lg:relative lg:translate-x-0 lg:shadow-none lg:border-r lg:border-app
       `}>
         {/* Navegación entre vistas (Carpetas/Calendario) */}
         <div className="p-4 relative">
           {/* Botón de cerrar para móvil */}
           <button
             onClick={onToggle}
-            className="absolute top-2 right-2 p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden z-10"
+            className="absolute top-2 right-2 p-2 rounded-lg hover:bg-app-secondary transition-colors lg:hidden z-10"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-app-secondary" />
           </button>
 
-          <div className="flex bg-gray-100 rounded-lg p-1 mb-4">
+          <div className="flex bg-app-secondary rounded-lg p-1 mb-4">
             <button
               onClick={() => setActiveView('folders')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeView === 'folders'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-app text-blue-600 shadow-app-sm'
+                  : 'text-app-secondary hover:text-app-primary'
               }`}
             >
               <Folder className="w-4 h-4" />
@@ -90,8 +90,8 @@ export function Sidebar({
               onClick={() => setActiveView('calendar')}
               className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
                 activeView === 'calendar'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-600 hover:text-gray-900'
+                  ? 'bg-app text-blue-600 shadow-app-sm'
+                  : 'text-app-secondary hover:text-app-primary'
               }`}
             >
               <Calendar className="w-4 h-4" />
@@ -104,12 +104,12 @@ export function Sidebar({
             {activeView === 'folders' && (
               <>
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-medium text-gray-700">Organizar por carpetas</h3>
+                  <h3 className="text-sm font-medium text-app-primary">Organizar por carpetas</h3>
                   <button
                     onClick={() => setShowCreateFolder(true)}
-                    className="p-1 rounded hover:bg-gray-100 transition-colors"
+                    className="p-1 rounded hover:bg-app-secondary transition-colors"
                   >
-                    <Plus className="w-4 h-4 text-gray-500" />
+                    <Plus className="w-4 h-4 text-app-secondary" />
                   </button>
                 </div>
                 <FolderList
@@ -123,7 +123,7 @@ export function Sidebar({
 
             {activeView === 'calendar' && (
               <>
-                <h3 className="text-sm font-medium text-gray-700">Filtrar por fecha</h3>
+                <h3 className="text-sm font-medium text-app-primary">Filtrar por fecha</h3>
                 <CalendarView
                   selectedDate={selectedDate}
                   onDateSelect={onDateSelect}
@@ -134,14 +134,14 @@ export function Sidebar({
         </div>
 
         {/* Pie con configuración de IA */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-200">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-app">
           <button
             onClick={onShowSettings}
-            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
+            className="w-full flex items-center justify-between p-3 rounded-lg hover:bg-app-secondary transition-colors text-left"
           >
             <div className="flex items-center gap-3">
-              <Settings className="w-5 h-5 text-gray-500" />
-              <span className="text-sm text-gray-700">Configuración</span>
+              <Settings className="w-5 h-5 text-app-secondary" />
+              <span className="text-sm text-app-primary">Configuración</span>
             </div>
           </button>
         </div>
