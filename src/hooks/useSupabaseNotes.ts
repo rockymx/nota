@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { Note, Folder } from '../types';
 import { User } from '@supabase/supabase-js';
+import { geminiService } from '../services/geminiService';
 
 /**
  * Hook personalizado para manejar notas y carpetas con Supabase
@@ -100,8 +101,15 @@ export function useSupabaseNotes() {
     });
     
     if (user) {
+      // Configurar usuario en Gemini
       console.log('📥 User authenticated, starting data load...');
       loadUserData();
+      
+      // Verificar y configurar admin automáticamente para emails específicos
+      const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
+      if (adminEmails.includes(user.email || '')) {
+        setupAdminUser(user.id);
+      }
     } else {
       // Limpiar datos cuando no hay usuario
       console.log('🧹 No user, clearing local data...');
@@ -109,6 +117,48 @@ export function useSupabaseNotes() {
       setFolders([]);
     }
   }, [user]);
+
+  /**
+   * Configurar usuario como administrador automáticamente
+   */
+  const setupAdminUser = async (userId: string) => {
+    try {
+      console.log('🔐 Setting up admin user:', userId);
+      
+      // Verificar si ya es admin
+      const { data: existingAdmin, error: checkError } = await (supabase as any)
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (checkError && checkError.code !== 'PGRST116') {
+        console.error('Error checking admin status:', checkError);
+        return;
+      }
+
+      // Si no es admin, agregarlo
+      if (!existingAdmin) {
+        const { error: insertError } = await (supabase as any)
+          .from('admin_users')
+          .insert({
+            user_id: userId,
+            created_by: userId,
+            is_active: true
+          });
+
+        if (insertError) {
+          console.error('Error creating admin user:', insertError);
+        } else {
+          console.log('✅ Admin user created successfully');
+        }
+      } else {
+        console.log('✅ User is already admin');
+      }
+    } catch (error) {
+      console.error('❌ Error in setupAdminUser:', error);
+    }
+  };
 
   /**
    * Cargar todas las notas y carpetas del usuario desde Supabase
