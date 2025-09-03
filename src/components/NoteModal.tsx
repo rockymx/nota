@@ -45,10 +45,11 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
   };
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4 md:p-4">
-      <div className="bg-app rounded-xl md:rounded-xl shadow-xl w-full max-w-2xl max-h-[90vh] md:max-h-[90vh] overflow-hidden 
-                      fixed md:relative inset-0 md:inset-auto h-full md:h-auto transition-colors duration-300 border border-app">
+      <div className="bg-app shadow-xl w-full max-w-2xl transition-colors duration-300 border border-app
+                      fixed md:relative inset-0 md:inset-auto md:rounded-xl md:max-h-[90vh] 
+                      flex flex-col h-full md:h-auto md:overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between p-4 md:p-6 border-b border-app">
+        <div className="flex items-center justify-between p-4 md:p-6 border-b border-app flex-shrink-0">
           <h2 className="text-xl font-semibold text-app-primary flex-1 pr-4">
             {note.title}
           </h2>
@@ -78,7 +79,7 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
         </div>
 
         {/* Content */}
-        <div className="p-4 md:p-6 overflow-y-auto flex-1 md:max-h-[60vh]">
+        <div className="p-4 md:p-6 overflow-y-auto flex-1 min-h-0">
           {note.content ? (
             <MarkdownRenderer content={note.content} />
           ) : (
@@ -87,7 +88,7 @@ export function NoteModal({ note, folders, onClose, onEdit }: NoteModalProps) {
         </div>
 
         {/* Footer with metadata */}
-        <div className="p-4 md:p-6 border-t border-app bg-app-secondary">
+        <div className="p-4 md:p-6 border-t border-app bg-app-secondary flex-shrink-0">
           <div className="flex items-center justify-between text-sm text-app-secondary">
             <div className="flex items-center gap-4">
               {folder && (
