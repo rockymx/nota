@@ -12,6 +12,7 @@ import { useSupabaseNotes } from './hooks/useSupabaseNotes';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
+import { AdminSetup } from './components/AdminSetup';
 
 console.log('📱 App component module loading...');
 console.log('🔍 Environment check in App:', {
@@ -37,6 +38,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false);
   
   const [showAdminDashboard, setShowAdminDashboard] = useState(false);
+  const [showAdminSetup, setShowAdminSetup] = useState(false);
   console.log('🎛️ App state initialized');
   
   // Hook que maneja toda la lógica de notas y autenticación
@@ -105,6 +107,16 @@ function App() {
     promptsCount: aiPrompts.length,
     hiddenCount: hiddenPromptIds.size
   });
+
+  // Verificar si necesitamos mostrar setup de admin
+  useEffect(() => {
+    if (user && user.email === '2dcommx02@gmail.com' && !adminLoading) {
+      // Solo mostrar setup si no es admin aún
+      if (!isAdmin) {
+        setShowAdminSetup(true);
+      }
+    }
+  }, [user, isAdmin, adminLoading]);
 
   // Función para crear una nueva nota
   const handleCreateNote = () => {
@@ -293,6 +305,14 @@ function App() {
           folders={folders}
           onClose={() => setViewingNote(null)}
           onEdit={handleEditNote}
+        />
+      )}
+
+      {/* Modal de configuración de administrador */}
+      {showAdminSetup && (
+        <AdminSetup
+          user={user}
+          onComplete={() => setShowAdminSetup(false)}
         />
       )}
     </div>
