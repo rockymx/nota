@@ -264,7 +264,7 @@ export function useSupabaseNotes() {
     try {
       console.log('📁 createFolder called:', { name, color, userId: user.id });
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = (supabase as any)
+      const { data, error } = await supabase
         .from('folders')
         .insert({
           name,
@@ -347,7 +347,7 @@ export function useSupabaseNotes() {
       });
       
       // Usar timeout para evitar que se cuelgue
-      const insertPromise = (supabase as any)
+      const { data, error } = await supabase
         .from('notes')
         .insert({
           title,
@@ -443,7 +443,7 @@ export function useSupabaseNotes() {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const updatePromise = (supabase as any)
+      const { error } = await supabase
         .from('notes')
         .update({
           ...supabaseUpdates,
@@ -504,7 +504,7 @@ export function useSupabaseNotes() {
     try {
       console.log('🗑️ deleteNote called:', { noteId: id, userId: user.id });
       
-      const deletePromise = supabase
+      const { error } = await supabase
         .from('notes')
         .delete()
         .eq('id', id)
@@ -553,7 +553,7 @@ export function useSupabaseNotes() {
       console.log('🗑️ deleteFolder called:', { folderId: id, userId: user.id });
       
       // Primero, actualizar notas para remover la asociación con la carpeta
-      const updateNotesPromise = (supabase as any)
+      const { error: moveError } = await supabase
         .from('notes')
         .update({ folder_id: null } as any)
         .eq('folder_id', id)
@@ -566,7 +566,7 @@ export function useSupabaseNotes() {
       await Promise.race([updateNotesPromise, timeoutPromise1]);
 
       // Luego, eliminar la carpeta
-      const deleteFolderPromise = supabase
+      const { error } = await supabase
         .from('folders')
         .delete()
         .eq('id', id)

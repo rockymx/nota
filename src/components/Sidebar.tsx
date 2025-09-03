@@ -13,7 +13,6 @@ import { Folder as FolderType } from '../types';
 interface SidebarProps {
   isOpen: boolean;
   onToggle: () => void;
-  user: User | null;
   folders: FolderType[];
   selectedFolderId: string | null;
   selectedDate: Date | null;
@@ -27,7 +26,6 @@ interface SidebarProps {
 export function Sidebar({
   isOpen,
   onToggle,
-  user,
   folders,
   selectedFolderId,
   selectedDate,

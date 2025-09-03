@@ -126,13 +126,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_settings')
-        .upsert({
+        .upsert([{
           user_id: user.id,
           theme: newTheme,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        }], { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Theme saved to Supabase');
@@ -146,13 +146,13 @@ export function SettingsPage({
     
     // Guardar en Supabase
     try {
-      const { error } = await (supabase as any)
+      const { error } = await supabase
         .from('user_settings')
-        .upsert({
+        .upsert([{
           user_id: user.id,
           auto_save: enabled,
           updated_at: new Date().toISOString()
-        }, { onConflict: 'user_id' });
+        }], { onConflict: 'user_id' });
 
       if (error) throw error;
       console.log('✅ Auto-save preference saved to Supabase');
