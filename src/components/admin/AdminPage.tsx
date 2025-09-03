@@ -29,8 +29,9 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
     try {
       console.log('🔐 Checking admin status for:', user.email);
       
-      // Verificar si es el email específico de admin
-      if (user.email === '2dcommx02@gmail.com') {
+      // Verificar si es uno de los emails específicos de admin
+      const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
+      if (adminEmails.includes(user.email || '')) {
         // Asegurar que esté en la tabla admin_users
         const { error: upsertError } = await (supabase as any)
           .from('admin_users')

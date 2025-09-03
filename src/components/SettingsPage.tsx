@@ -247,7 +247,7 @@ export function SettingsPage({
             <div>
               <h3 className="text-md font-medium text-app-primary mb-3">Acciones de cuenta</h3>
               <div className="space-y-3">
-                {user.email === '2dcommx02@gmail.com' && (
+                {['2dcommx02@gmail.com', '2dcommx01@gmail.com'].includes(user.email || '') && (
                   <a
                     href="/admin"
                     className="inline-flex items-center gap-2 px-4 py-2 bg-purple-500 hover:bg-purple-600 text-white rounded-lg font-medium transition-colors"
