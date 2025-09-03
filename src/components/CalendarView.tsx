@@ -112,9 +112,9 @@ export function CalendarView({ selectedDate, onDateSelect, notes }: CalendarView
                 {format(day, 'd')}
               </span>
               
-              {/* Indicador de notas - Punto discreto */}
+              {/* Indicador de notas - Punto discreto debajo del número */}
               {hasNotes && (
-                <div className={`w-1.5 h-1.5 rounded-full mt-1 transition-colors ${
+                <div className={`w-1.5 h-1.5 rounded-full mt-0.5 transition-colors ${
                   isSelected 
                     ? 'bg-white shadow-sm' 
                     : isTodayDate
