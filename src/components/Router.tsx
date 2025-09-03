@@ -1,19 +1,14 @@
 import { useState, useEffect } from 'react';
 import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
-import App from '../App';
 import { AuthForm } from './AuthForm';
 import { AdminPage } from './admin/AdminPage';
+import App from '../App';
 
 export function Router() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [currentPath, setCurrentPath] = useState(() => {
-    // Obtener la ruta actual al inicializar
-    const path = window.location.pathname;
-    console.log('🌐 Initial route:', path);
-    return path;
-  });
+  const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
     console.log('🔐 Router: Auth effect triggered');
@@ -45,8 +40,9 @@ export function Router() {
 
     // Escuchar cambios en la URL
     const handlePopState = () => {
-      setCurrentPath(window.location.pathname);
-      console.log('🌐 Route changed to:', window.location.pathname);
+      const newPath = window.location.pathname;
+      console.log('🌐 Route changed to:', newPath);
+      setCurrentPath(newPath);
     };
 
     window.addEventListener('popstate', handlePopState);
@@ -61,15 +57,9 @@ export function Router() {
     console.log('🧭 Navigating to:', path);
     window.history.pushState({}, '', path);
     setCurrentPath(path);
-    
-    // Forzar re-render
-    setTimeout(() => {
-      setCurrentPath(window.location.pathname);
-    }, 0);
   };
 
   const goHome = () => navigateTo('/');
-  const goToAdmin = () => navigateTo('/admin');
 
   if (loading) {
     return (
@@ -91,7 +81,7 @@ export function Router() {
   console.log('🎯 Routing decision:', {
     currentPath,
     user: user.email,
-    isAdmin: user.email === '2dcommx02@gmail.com'
+    isAdminEmail: ['2dcommx02@gmail.com', '2dcommx01@gmail.com'].includes(user.email || '')
   });
 
   // Routing simple
@@ -101,5 +91,5 @@ export function Router() {
   }
 
   console.log('🏠 Rendering main App');
-  return <App onGoToAdmin={goToAdmin} />;
+  return <App />;
 }
