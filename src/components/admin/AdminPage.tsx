@@ -32,40 +32,27 @@ export function AdminPage({ user, onGoHome }: AdminPageProps) {
       // Verificar si es uno de los emails específicos de admin
       const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
       if (adminEmails.includes(user.email || '')) {
-        // Asegurar que esté en la tabla admin_users
+        // Use upsert to avoid recursion issues
         const { error: upsertError } = await (supabase as any)
           .from('admin_users')
           .upsert({
             user_id: user.id,
             created_by: user.id,
             is_active: true
-          }, { onConflict: 'user_id' });
+          }, { 
+            onConflict: 'user_id',
+            ignoreDuplicates: true 
+          });
 
-        if (upsertError) {
+        if (upsertError && !upsertError.message.includes('duplicate')) {
           console.error('Error setting up admin:', upsertError);
         }
         
         setIsAdmin(true);
         await loadAdminData();
       } else {
-        // Verificar si es admin en la base de datos
-        const { data, error } = await (supabase as any)
-          .from('admin_users')
-          .select('id, is_active')
-          .eq('user_id', user.id)
-          .eq('is_active', true)
-          .maybeSingle();
-
-        if (error && error.code !== 'PGRST116') {
-          throw error;
-        }
-
-        if (data) {
-          setIsAdmin(true);
-          await loadAdminData();
-        } else {
-          setError('No tienes permisos de administrador');
-        }
+        // For non-admin emails, just show access denied
+        setError('No tienes permisos de administrador');
       }
     } catch (error) {
       console.error('❌ Error checking admin status:', error);

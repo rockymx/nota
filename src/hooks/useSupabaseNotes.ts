@@ -32,6 +32,17 @@ export function useSupabaseNotes() {
     const getUser = async () => {
       try {
         console.log('👤 Attempting to get current user from Supabase...');
+        
+        // Clear any invalid session first
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session && session.expires_at && new Date(session.expires_at * 1000) < new Date()) {
+          console.log('🔓 Session expired, clearing...');
+          await supabase.auth.signOut();
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
         // Agregar timeout para evitar que se cuelgue la aplicación
         const getUserPromise = supabase.auth.getUser();
         const timeoutPromise = new Promise((_, reject) => 
@@ -55,6 +66,8 @@ export function useSupabaseNotes() {
         // Si es un error de sesión inválida, cerrar sesión
         if (error instanceof Error && (
           error.message.includes('session_not_found') ||
+          error.message.includes('refresh_token_not_found') ||
+          error.message.includes('Invalid Refresh Token') ||
           error.message.includes('JWT expired') ||
           error.message.includes('403') ||
           error.message.includes('Auth timeout')
@@ -125,35 +138,22 @@ export function useSupabaseNotes() {
     try {
       console.log('🔐 Setting up admin user:', userId);
       
-      // Verificar si ya es admin
-      const { data: existingAdmin, error: checkError } = await (supabase as any)
+      // Use upsert to avoid checking first (prevents recursion)
+      const { error: upsertError } = await (supabase as any)
         .from('admin_users')
-        .select('id')
-        .eq('user_id', userId)
-        .maybeSingle();
+        .upsert({
+          user_id: userId,
+          created_by: userId,
+          is_active: true
+        }, { 
+          onConflict: 'user_id',
+          ignoreDuplicates: true 
+        });
 
-      if (checkError && checkError.code !== 'PGRST116') {
-        console.error('Error checking admin status:', checkError);
-        return;
-      }
-
-      // Si no es admin, agregarlo
-      if (!existingAdmin) {
-        const { error: insertError } = await (supabase as any)
-          .from('admin_users')
-          .insert({
-            user_id: userId,
-            created_by: userId,
-            is_active: true
-          });
-
-        if (insertError) {
-          console.error('Error creating admin user:', insertError);
-        } else {
-          console.log('✅ Admin user created successfully');
-        }
+      if (upsertError && !upsertError.message.includes('duplicate')) {
+        console.error('Error setting up admin user:', upsertError);
       } else {
-        console.log('✅ User is already admin');
+        console.log('✅ Admin user setup completed');
       }
     } catch (error) {
       console.error('❌ Error in setupAdminUser:', error);

@@ -75,7 +75,7 @@ export function Router() {
 
   if (!user) {
     console.log('🔓 No user, showing auth form');
-    return <AuthForm onSuccess={() => {}} />;
+    return <AuthForm onSuccess={goHome} />;
   }
 
   console.log('🎯 Routing decision:', {
