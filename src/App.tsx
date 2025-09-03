@@ -177,7 +177,6 @@ function App() {
       <Sidebar
         isOpen={sidebarOpen}
         onToggle={() => setSidebarOpen(!sidebarOpen)}
-        user={user}
         folders={folders}
         selectedFolderId={selectedFolderId}
         selectedDate={selectedDate}
