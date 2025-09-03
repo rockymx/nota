@@ -37,7 +37,6 @@ export function Sidebar({
   onDeleteFolder,
   onShowSettings,
   onShowAdmin,
-  onShowAdmin,
 }: SidebarProps) {
   // Estados para controlar la vista activa y modales
   const [activeView, setActiveView] = useState<'folders' | 'calendar'>('folders');
