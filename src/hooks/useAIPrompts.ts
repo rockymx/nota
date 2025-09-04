@@ -34,14 +34,14 @@ export function useAIPrompts(user: User | null) {
     // Cargar prompts ocultos del usuario
     const hiddenData = await operations.hiddenPrompts?.select?.(user.id);
     if (hiddenData) {
-      const hiddenIds = new Set(hiddenData.map((h: any) => h.prompt_id));
+      const hiddenIds = new Set((hiddenData as any[]).map((h: any) => h.prompt_id));
       setHiddenPromptIds(hiddenIds);
     }
 
     // Cargar todos los prompts
     const data = await operations.aiPrompts.select(user.id);
     if (data) {
-      const loadedPrompts: AIPrompt[] = data.map((prompt: any) => ({
+      const loadedPrompts: AIPrompt[] = (data as any[]).map((prompt: any) => ({
         id: prompt.id,
         name: prompt.name,
         description: prompt.description,
@@ -95,15 +95,15 @@ export function useAIPrompts(user: User | null) {
     if (!data) return null;
 
     const newPrompt: AIPrompt = {
-      id: data.id,
+      id: (data as any).id,
       name: validatedData.name,
       description: validatedData.description,
       promptTemplate: validatedData.promptTemplate,
       category: validatedData.category,
-      isDefault: data.is_default,
-      userId: data.user_id,
-      createdAt: new Date(data.created_at),
-      updatedAt: new Date(data.updated_at),
+      isDefault: (data as any).is_default,
+      userId: (data as any).user_id,
+      createdAt: new Date((data as any).created_at),
+      updatedAt: new Date((data as any).updated_at),
     };
 
     setPrompts(prev => [newPrompt, ...prev]);

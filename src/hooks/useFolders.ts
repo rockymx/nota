@@ -28,6 +28,7 @@ export function useFolders(user: User | null) {
       if (!data) return [];
 
       const loadedFolders: Folder[] = data.map((folder: any) => ({
+      const loadedFolders: Folder[] = (data as any[]).map((folder: any) => ({
         id: folder.id,
         name: folder.name,
         color: folder.color,
@@ -60,10 +61,10 @@ export function useFolders(user: User | null) {
       if (!data) throw new Error('Failed to create folder');
 
       const newFolder: Folder = {
-        id: data.id,
+        id: (data as any).id,
         name: validatedData.name,
         color: validatedData.color,
-        createdAt: new Date(data.created_at),
+        createdAt: new Date((data as any).created_at),
       };
 
       return newFolder;
@@ -105,7 +106,7 @@ export function useFolders(user: User | null) {
       if (!user) throw new Error('User not authenticated');
 
       // First, update notes to remove folder association
-      await operations.notes.update('*', user.id, { folder_id: null }, `folder_id.eq.${id}`);
+      await operations.notes.update(id, user.id, { folder_id: null });
 
       // Then delete the folder
       await operations.folders.delete(id, user.id);

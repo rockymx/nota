@@ -28,6 +28,7 @@ export function useNotes(user: User | null) {
       if (!data) return [];
 
       const loadedNotes: Note[] = data.map((note: any) => ({
+      const loadedNotes: Note[] = (data as any[]).map((note: any) => ({
         id: note.id,
         title: note.title,
         content: note.content || '',
@@ -69,13 +70,13 @@ export function useNotes(user: User | null) {
       if (!data) throw new Error('Failed to create note');
 
       const newNote: Note = {
-        id: data.id,
+        id: (data as any).id,
         title: validatedData.title,
         content: validatedData.content,
-        folderId: data.folder_id,
+        folderId: (data as any).folder_id,
         tags,
-        createdAt: new Date(data.created_at),
-        updatedAt: new Date(data.updated_at),
+        createdAt: new Date((data as any).created_at),
+        updatedAt: new Date((data as any).updated_at),
       };
 
       return newNote;

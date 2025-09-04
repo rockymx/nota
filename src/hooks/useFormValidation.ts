@@ -51,13 +51,13 @@ export function useFormValidation<T extends Record<string, any>>(
     try {
       // Crear un objeto parcial para validar solo este campo
       const partialData = { [fieldName]: value };
-      const fieldSchema = schema.pick({ [fieldName]: true } as any);
+      const fieldSchema = (schema as any).pick({ [fieldName]: true });
       fieldSchema.parse(partialData);
       
       return { valid: true, error: null };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const fieldError = error.errors.find(err => err.path.includes(fieldName));
+        const fieldError = error.issues.find((err: any) => err.path.includes(fieldName));
         return { 
           valid: false, 
           error: fieldError?.message || 'Error de validación' 
@@ -142,7 +142,7 @@ export function useFormValidation<T extends Record<string, any>>(
       return { valid: true, errors: {}, data: validatedData };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        error.errors.forEach(err => {
+        error.issues.forEach((err: any) => {
           const fieldName = err.path[0] as string;
           if (fieldName) {
             errors[fieldName] = err.message;

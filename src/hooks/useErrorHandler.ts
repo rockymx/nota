@@ -198,21 +198,27 @@ export function useErrorHandler() {
     options: ErrorHandlerOptions & { operationName?: string } = {}
   ): Promise<T | null> => {
     const {
-      retryConfig = RETRY_CONFIG,
+      retryConfig,
       operationName = 'operation',
       context = {},
     } = options;
 
-    let lastError: Error;
-    let delay = retryConfig.initialDelay || RETRY_CONFIG.INITIAL_DELAY;
+    const finalRetryConfig = retryConfig || {
+      maxRetries: RETRY_CONFIG.MAX_RETRIES,
+      initialDelay: RETRY_CONFIG.INITIAL_DELAY,
+      maxDelay: RETRY_CONFIG.MAX_DELAY,
+      backoffFactor: RETRY_CONFIG.BACKOFF_FACTOR,
+    };
 
-    for (let attempt = 0; attempt <= (retryConfig.maxRetries || RETRY_CONFIG.MAX_RETRIES); attempt++) {
+    let lastError: Error;
+    let delay = finalRetryConfig.initialDelay;
+
+    for (let attempt = 0; attempt <= finalRetryConfig.maxRetries; attempt++) {
       try {
         if (attempt > 0) {
-          console.log(`🔄 Retry attempt ${attempt}/${retryConfig.maxRetries} for ${operationName}`);
+          console.log(`🔄 Retry attempt ${attempt}/${finalRetryConfig.maxRetries} for ${operationName}`);
           await new Promise(resolve => setTimeout(resolve, delay));
-          delay = Math.min(delay * (retryConfig.backoffFactor || RETRY_CONFIG.BACKOFF_FACTOR), 
-                          retryConfig.maxDelay || RETRY_CONFIG.MAX_DELAY);
+          delay = Math.min(delay * finalRetryConfig.backoffFactor, finalRetryConfig.maxDelay);
         }
 
         const result = await operation();
@@ -235,7 +241,7 @@ export function useErrorHandler() {
         }
 
         // Si es el último intento, manejar el error
-        if (attempt === (retryConfig.maxRetries || RETRY_CONFIG.MAX_RETRIES)) {
+        if (attempt === finalRetryConfig.maxRetries) {
           break;
         }
       }
@@ -244,7 +250,7 @@ export function useErrorHandler() {
     // Manejar el error final
     return await handleError(lastError!, {
       ...options,
-      context: { ...context, operation: operationName, attempts: (retryConfig.maxRetries || 0) + 1 },
+      context: { ...context, operation: operationName, attempts: finalRetryConfig.maxRetries + 1 },
     });
   }, [handleError, classifyError, info]);
 

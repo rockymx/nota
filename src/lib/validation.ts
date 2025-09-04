@@ -50,7 +50,7 @@ const PATTERNS = {
 } as const;
 
 // Schemas de validación con Zod
-export const schemas = {
+export const schemas: Record<string, z.ZodSchema<any>> = {
   // Validación de email
   email: z.string()
     .min(1, 'El email es requerido')
@@ -101,7 +101,7 @@ export const schemas = {
 
   tags: z.array(z.string())
     .max(VALIDATION_LIMITS.TAGS_MAX_COUNT, `Máximo ${VALIDATION_LIMITS.TAGS_MAX_COUNT} tags permitidos`)
-    .transform(tags => tags.map(tag => schemas.tag.parse(tag))),
+    .transform((tags: string[]) => tags.map((tag: string) => schemas.tag.parse(tag))),
 
   // Validación de prompt de IA
   promptName: z.string()
@@ -284,7 +284,7 @@ export function useValidation<T>(schema: z.ZodSchema<T>) {
       return { success: true, data: validatedData };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors = error.errors.map(err => err.message);
+        const errors = error.issues.map((err: any) => err.message);
         return { success: false, errors };
       }
       return { success: false, errors: ['Error de validación desconocido'] };
@@ -297,7 +297,7 @@ export function useValidation<T>(schema: z.ZodSchema<T>) {
       return { success: true, data: validatedData };
     } catch (error) {
       if (error instanceof z.ZodError) {
-        const errors = error.errors.map(err => err.message);
+        const errors = error.issues.map((err: any) => err.message);
         return { success: false, errors };
       }
       return { success: false, errors: ['Error de validación desconocido'] };
@@ -451,7 +451,7 @@ export const customValidators = {
         validNotes.push(validNote);
       } catch (error) {
         if (error instanceof z.ZodError) {
-          errors.push(`Nota ${index + 1}: ${error.errors[0].message}`);
+          errors.push(`Nota ${index + 1}: ${error.issues[0].message}`);
         }
       }
     });
@@ -486,7 +486,7 @@ export function validateAndSanitize<T>(schema: z.ZodSchema<T>, data: unknown): T
     return schema.parse(data);
   } catch (error) {
     if (error instanceof z.ZodError) {
-      const firstError = error.errors[0];
+      const firstError = error.issues[0];
       throw new Error(`Validación fallida: ${firstError.message}`);
     }
     throw new Error('Error de validación desconocido');
