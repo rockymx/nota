@@ -51,7 +51,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
   // Hooks especializados separados
   const { user, loading: authLoading, isAuthenticated } = useAuth();
   const { notes, loading: notesLoading, createNote, updateNote, deleteNote } = useNotes(user);
-  const { folders, loading: foldersLoading, createFolder, deleteFolder } = useFolders(user);
+  const { folders, loading: foldersLoading, createFolder, deleteFolder, restoreFolder } = useFolders(user);
   const {
     filteredNotes,
     selectedFolderId,
