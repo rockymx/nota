@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { X, Plus, Calendar, Folder, Settings } from 'lucide-react';
 import { FolderList } from './FolderList';
 import { CalendarView } from './CalendarView';
@@ -43,13 +43,13 @@ export function Sidebar({
   const [showCreateFolder, setShowCreateFolder] = useState(false);
 
   // Función para crear carpeta con manejo de errores
-  const handleCreateFolder = async (name: string, color: string) => {
+  const handleCreateFolder = useCallback(async (name: string, color: string) => {
     try {
       await onCreateFolder(name, color);
     } catch (error) {
       console.error('Error creating folder:', error);
     }
-  };
+  }, [onCreateFolder]);
 
   return (
     <>

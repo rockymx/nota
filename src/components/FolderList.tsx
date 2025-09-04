@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import { Folder, Trash2, Hash } from 'lucide-react';
 import { Folder as FolderType } from '../types';
 import { DeleteFolderModal } from './DeleteFolderModal';
@@ -11,7 +11,7 @@ interface FolderListProps {
   onDeleteFolder: (id: string) => void;
 }
 
-export function FolderList({
+const FolderList = memo(function FolderList({
   folders,
   notes,
   selectedFolderId,
@@ -20,20 +20,31 @@ export function FolderList({
 }: FolderListProps) {
   const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
 
-  const handleDeleteClick = (folder: FolderType) => {
+  const handleDeleteClick = useCallback((folder: FolderType) => {
     setFolderToDelete(folder);
-  };
+  }, []);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if (folderToDelete) {
       onDeleteFolder(folderToDelete.id);
       setFolderToDelete(null);
     }
-  };
+  }, [folderToDelete, onDeleteFolder]);
 
-  const getNotesCountInFolder = (folderId: string) => {
-    return notes.filter(note => note.folderId === folderId).length;
-  };
+  // Memoizar el conteo de notas por carpeta
+  const notesCountByFolder = useMemo(() => {
+    const countMap = new Map<string, number>();
+    notes.forEach(note => {
+      if (note.folderId) {
+        countMap.set(note.folderId, (countMap.get(note.folderId) || 0) + 1);
+      }
+    });
+    return countMap;
+  }, [notes]);
+
+  const getNotesCountInFolder = useCallback((folderId: string) => {
+    return notesCountByFolder.get(folderId) || 0;
+  }, [notesCountByFolder]);
 
   return (
     <>
@@ -105,4 +116,6 @@ export function FolderList({
       )}
     </>
   );
-}
+});
+
+export { FolderList };

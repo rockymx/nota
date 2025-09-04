@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Menu, Plus } from 'lucide-react';
 // Componentes principales de la aplicación
 import { Sidebar } from './components/Sidebar';
@@ -98,28 +98,28 @@ function App({ onGoToAdmin }: AppProps = {}) {
   });
 
   // Función para crear una nueva nota
-  const handleCreateNote = () => {
+  const handleCreateNote = useCallback(() => {
     console.log('➕ User action: Creating new note');
     setEditingNote(null);
     setShowEditor(true);
-  };
+  }, []);
 
   // Función para editar una nota existente
-  const handleEditNote = (note: Note) => {
+  const handleEditNote = useCallback((note: Note) => {
     console.log('✏️ User action: Editing note', note.id);
     setEditingNote(note);
     setShowEditor(true);
     setViewingNote(null);
-  };
+  }, []);
 
   // Función para ver una nota en modal
-  const handleViewNote = (note: Note) => {
+  const handleViewNote = useCallback((note: Note) => {
     console.log('👁️ User action: Viewing note', note.id);
     setViewingNote(note);
-  };
+  }, []);
 
   // Función para guardar una nota (nueva o editada)
-  const handleSaveNote = async (title: string, content: string, folderId: string | null) => {
+  const handleSaveNote = useCallback(async (title: string, content: string, folderId: string | null) => {
     console.log('💾 User action: Saving note', { 
       title, 
       folderId, 
@@ -140,7 +140,37 @@ function App({ onGoToAdmin }: AppProps = {}) {
     console.log('✅ Note save operation completed');
     setShowEditor(false);
     setEditingNote(null);
-  };
+  }, [editingNote, updateNote, createNote]);
+
+  // Memoizar las notas filtradas para evitar recálculos innecesarios
+  const filteredNotes = useMemo(() => {
+    return getFilteredNotes();
+  }, [getFilteredNotes]);
+
+  // Memoizar callbacks para el sidebar
+  const handleFolderSelect = useCallback((folderId: string | null) => {
+    setSelectedFolderId(folderId);
+    // Si estamos en configuración, volver a la vista principal
+    if (showSettings) {
+      setShowSettings(false);
+    }
+    // Cerrar sidebar en móvil después de seleccionar
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [setSelectedFolderId, showSettings]);
+
+  const handleDateSelect = useCallback((date: Date | null) => {
+    setSelectedDate(date);
+    // Si estamos en configuración, volver a la vista principal
+    if (showSettings) {
+      setShowSettings(false);
+    }
+    // Cerrar sidebar en móvil después de seleccionar
+    if (window.innerWidth < 1024) {
+      setSidebarOpen(false);
+    }
+  }, [setSelectedDate, showSettings]);
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
   if (loading) {
@@ -159,7 +189,6 @@ function App({ onGoToAdmin }: AppProps = {}) {
   console.log('🎨 Rendering main app interface for authenticated user');
   
   // Obtener notas filtradas según carpeta y fecha seleccionada
-  const filteredNotes = getFilteredNotes();
   console.log('🔍 Filtered notes for display:', {
     total: notes.length,
     filtered: filteredNotes.length,
@@ -178,28 +207,8 @@ function App({ onGoToAdmin }: AppProps = {}) {
         notes={notes}
         selectedFolderId={selectedFolderId}
         selectedDate={selectedDate}
-        onFolderSelect={(folderId) => {
-          setSelectedFolderId(folderId);
-          // Si estamos en configuración, volver a la vista principal
-          if (showSettings) {
-            setShowSettings(false);
-          }
-          // Cerrar sidebar en móvil después de seleccionar
-          if (window.innerWidth < 1024) {
-            setSidebarOpen(false);
-          }
-        }}
-        onDateSelect={(date) => {
-          setSelectedDate(date);
-          // Si estamos en configuración, volver a la vista principal
-          if (showSettings) {
-            setShowSettings(false);
-          }
-          // Cerrar sidebar en móvil después de seleccionar
-          if (window.innerWidth < 1024) {
-            setSidebarOpen(false);
-          }
-        }}
+        onFolderSelect={handleFolderSelect}
+        onDateSelect={handleDateSelect}
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}

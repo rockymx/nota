@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Save, X } from 'lucide-react';
 import { Note, Folder } from '../types';
 import { AIPrompt } from '../types';
@@ -28,6 +28,12 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
   const [aiError, setAiError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
 
+  // Memoizar prompts visibles para evitar recálculos
+  const visiblePrompts = useMemo(() => {
+    return aiPrompts.filter(prompt => 
+      !prompt.isDefault || !hiddenPromptIds.has(prompt.id)
+    );
+  }, [aiPrompts, hiddenPromptIds]);
   // Cargar datos de la nota cuando cambia
   useEffect(() => {
     if (note) {
@@ -44,15 +50,15 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
   }, [note]);
 
   // Función para guardar la nota
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     if (title.trim() || content.trim()) {
       onSave(title.trim() || 'Sin título', content, selectedFolderId);
       onClose();
     }
-  };
+  }, [title, content, selectedFolderId, onSave, onClose]);
 
   // Función para ejecutar prompt de IA seleccionado
-  const handleExecutePrompt = async (prompt: AIPrompt) => {
+  const handleExecutePrompt = useCallback(async (prompt: AIPrompt) => {
     if (!content.trim()) {
       setAiError('Escribe algo de contenido primero');
       return;
@@ -93,15 +99,15 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
     } finally {
       setAiLoading(false);
     }
-  };
+  }, [content]);
 
   // Manejar atajos de teclado (Ctrl+S para guardar)
-  const handleKeyDown = (e: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.ctrlKey && e.key === 's') {
       e.preventDefault();
       handleSave();
     }
-  };
+  }, [handleSave]);
 
   return (
     <div className="flex flex-col h-full bg-app transition-colors duration-300">
@@ -135,9 +141,7 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
           {/* Botón de IA (pendiente de implementar) */}
           <div className="flex items-center gap-1">
             <PromptSelector
-              prompts={aiPrompts.filter(prompt => 
-                !prompt.isDefault || !hiddenPromptIds.has(prompt.id)
-              )}
+              prompts={visiblePrompts}
               onSelectPrompt={handleExecutePrompt}
               loading={aiLoading}
               disabled={!content.trim()}

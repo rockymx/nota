@@ -1,3 +1,4 @@
+import React, { memo, useMemo } from 'react';
 import { Note, Folder as FolderType } from '../types';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -16,11 +17,17 @@ interface NotesListProps {
   onViewNote: (note: Note) => void;
 }
 
-export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote }: NotesListProps) {
+const NotesList = memo(function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote }: NotesListProps) {
   // Función auxiliar para obtener carpeta por ID
-  const getFolderById = (id: string | null) => {
-    return folders.find(folder => folder.id === id);
-  };
+  const folderMap = useMemo(() => {
+    return new Map(folders.map(folder => [folder.id, folder]));
+  }, [folders]);
+
+  const getFolderById = useMemo(() => {
+    return (id: string | null) => {
+      return id ? folderMap.get(id) : undefined;
+    };
+  }, [folderMap]);
 
   // Mostrar mensaje cuando no hay notas
   if (notes.length === 0) {
@@ -111,4 +118,6 @@ export function NotesList({ notes, folders, onEditNote, onDeleteNote, onViewNote
       })}
     </div>
   );
-}
+});
+
+export { NotesList };

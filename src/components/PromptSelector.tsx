@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import { ChevronDown, Wand2, Sparkles } from 'lucide-react';
 import { AIPrompt } from '../types';
 
@@ -9,24 +9,28 @@ interface PromptSelectorProps {
   disabled?: boolean;
 }
 
-export function PromptSelector({ prompts, onSelectPrompt, loading = false, disabled = false }: PromptSelectorProps) {
+const PromptSelector = memo(function PromptSelector({ prompts, onSelectPrompt, loading = false, disabled = false }: PromptSelectorProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   // Agrupar prompts por categoría
-  const promptsByCategory = prompts.reduce((acc, prompt) => {
-    if (!acc[prompt.category]) {
-      acc[prompt.category] = [];
-    }
-    acc[prompt.category].push(prompt);
-    return acc;
-  }, {} as Record<string, AIPrompt[]>);
+  const promptsByCategory = useMemo(() => {
+    return prompts.reduce((acc, prompt) => {
+      if (!acc[prompt.category]) {
+        acc[prompt.category] = [];
+      }
+      acc[prompt.category].push(prompt);
+      return acc;
+    }, {} as Record<string, AIPrompt[]>);
+  }, [prompts]);
 
-  const categories = Object.keys(promptsByCategory).sort();
+  const categories = useMemo(() => {
+    return Object.keys(promptsByCategory).sort();
+  }, [promptsByCategory]);
 
-  const handleSelectPrompt = (prompt: AIPrompt) => {
+  const handleSelectPrompt = useCallback((prompt: AIPrompt) => {
     onSelectPrompt(prompt);
     setIsOpen(false);
-  };
+  }, [onSelectPrompt]);
 
   if (prompts.length === 0) {
     return (
@@ -116,4 +120,6 @@ export function PromptSelector({ prompts, onSelectPrompt, loading = false, disab
       )}
     </div>
   );
-}
+});
+
+export { PromptSelector };

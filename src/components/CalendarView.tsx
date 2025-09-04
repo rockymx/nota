@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState, memo, useMemo, useCallback } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, isToday, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -10,48 +10,59 @@ interface CalendarViewProps {
   notes: Note[];
 }
 
-export function CalendarView({ selectedDate, onDateSelect, notes }: CalendarViewProps) {
+const CalendarView = memo(function CalendarView({ selectedDate, onDateSelect, notes }: CalendarViewProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
-  const monthStart = startOfMonth(currentMonth);
-  const monthEnd = endOfMonth(currentMonth);
-  const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+  // Memoizar los días del mes para evitar recálculos
+  const days = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = endOfMonth(currentMonth);
+    return eachDayOfInterval({ start: monthStart, end: monthEnd });
+  }, [currentMonth]);
 
-  // Función mejorada para verificar si hay notas en un día específico
-  const hasNotesOnDay = (date: Date) => {
-    const targetDay = startOfDay(date);
+  // Memoizar el mapa de notas por día para optimizar búsquedas
+  const notesByDay = useMemo(() => {
+    const dayMap = new Map<string, Note[]>();
     
-    return notes.some(note => {
+    notes.forEach(note => {
       const noteDate = startOfDay(new Date(note.createdAt));
-      return isSameDay(noteDate, targetDay);
+      const dayKey = noteDate.toDateString();
+      
+      if (!dayMap.has(dayKey)) {
+        dayMap.set(dayKey, []);
+      }
+      dayMap.get(dayKey)!.push(note);
     });
-  };
-
-  // Función para contar notas en un día específico
-  const getNotesCountForDay = (date: Date) => {
-    const targetDay = startOfDay(date);
     
-    return notes.filter(note => {
-      const noteDate = startOfDay(new Date(note.createdAt));
-      return isSameDay(noteDate, targetDay);
-    }).length;
-  };
+    return dayMap;
+  }, [notes]);
 
-  const previousMonth = () => {
+  // Funciones optimizadas usando el mapa memoizado
+  const hasNotesOnDay = useCallback((date: Date) => {
+    const dayKey = startOfDay(date).toDateString();
+    return notesByDay.has(dayKey);
+  }, [notesByDay]);
+
+  const getNotesCountForDay = useCallback((date: Date) => {
+    const dayKey = startOfDay(date).toDateString();
+    return notesByDay.get(dayKey)?.length || 0;
+  }, [notesByDay]);
+
+  const previousMonth = useCallback(() => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() - 1));
-  };
+  }, [currentMonth]);
 
-  const nextMonth = () => {
+  const nextMonth = useCallback(() => {
     setCurrentMonth(new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1));
-  };
+  }, [currentMonth]);
 
-  const handleDateClick = (date: Date) => {
+  const handleDateClick = useCallback((date: Date) => {
     if (selectedDate && isSameDay(date, selectedDate)) {
       onDateSelect(null);
     } else {
       onDateSelect(date);
     }
-  };
+  }, [selectedDate, onDateSelect]);
 
   return (
     <div className="bg-app rounded-lg border border-app p-4">
@@ -151,4 +162,6 @@ export function CalendarView({ selectedDate, onDateSelect, notes }: CalendarView
       )}
     </div>
   );
-}
+});
+
+export { CalendarView };
