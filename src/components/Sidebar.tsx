@@ -20,6 +20,7 @@ interface SidebarProps {
   onDateSelect: (date: Date | null) => void;
   onCreateFolder: (name: string, color: string) => Promise<FolderType | null>;
   onDeleteFolder: (id: string) => void;
+  onRestoreFolder: (folder: FolderType, affectedNotes: Note[]) => void;
   onShowSettings: () => void;
   onShowAdmin?: () => void;
 }
@@ -35,6 +36,7 @@ export function Sidebar({
   onDateSelect,
   onCreateFolder,
   onDeleteFolder,
+  onRestoreFolder,
   onShowSettings,
   onShowAdmin,
 }: SidebarProps) {
@@ -122,6 +124,7 @@ export function Sidebar({
                   selectedFolderId={selectedFolderId}
                   onFolderSelect={onFolderSelect}
                   onDeleteFolder={onDeleteFolder}
+                  onRestoreFolder={onRestoreFolder}
                 />
               </>
             )}

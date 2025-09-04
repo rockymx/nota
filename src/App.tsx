@@ -222,6 +222,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
         onDateSelect={optimizedDateSelect}
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
+        onRestoreFolder={restoreFolder}
         onShowSettings={() => setShowSettings(true)}
         onShowAdmin={onGoToAdmin}
       />

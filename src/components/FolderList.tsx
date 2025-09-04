@@ -1,14 +1,15 @@
 import React, { useState, memo, useMemo, useCallback } from 'react';
 import { Folder, Trash2, Hash } from 'lucide-react';
-import { Folder as FolderType } from '../types';
+import { Folder as FolderType, Note } from '../types';
 import { useToast } from '../hooks/useToast';
 
 interface FolderListProps {
   folders: FolderType[];
-  notes: any[];
+  notes: Note[];
   selectedFolderId: string | null;
   onFolderSelect: (folderId: string | null) => void;
   onDeleteFolder: (id: string) => void;
+  onRestoreFolder: (folder: FolderType, affectedNotes: Note[]) => void;
 }
 
 const FolderList = memo(function FolderList({
@@ -17,11 +18,13 @@ const FolderList = memo(function FolderList({
   selectedFolderId,
   onFolderSelect,
   onDeleteFolder,
+  onRestoreFolder,
 }: FolderListProps) {
   const { warning } = useToast();
 
   const handleDeleteClick = useCallback((folder: FolderType) => {
-    const notesCount = getNotesCountInFolder(folder.id);
+    const affectedNotes = notes.filter(note => note.folderId === folder.id);
+    const notesCount = affectedNotes.length;
     const message = notesCount > 0 
       ? `${notesCount} nota${notesCount > 1 ? 's' : ''} se moverá${notesCount > 1 ? 'n' : ''} a "Sin carpeta"`
       : undefined;
@@ -32,15 +35,15 @@ const FolderList = memo(function FolderList({
       {
         label: 'Deshacer',
         onClick: () => {
-          // TODO: Implementar lógica de deshacer
-          console.log('Deshacer eliminación de carpeta:', folder.id);
+          console.log('🔄 Undoing folder deletion:', folder.name);
+          onRestoreFolder(folder, affectedNotes);
         }
       }
     );
     
     // Eliminar inmediatamente
     onDeleteFolder(folder.id);
-  }, [warning, onDeleteFolder, getNotesCountInFolder]);
+  }, [warning, onDeleteFolder, onRestoreFolder, notes]);
 
   // Memoizar el conteo de notas por carpeta
   const notesCountByFolder = useMemo(() => {
