@@ -28,6 +28,9 @@ export function useFolders(user: User | null) {
       if (!data) return [];
 
       const loadedFolders: Folder[] = data.map((folder: any) => ({
+      }
+      )
+      )
       const loadedFolders: Folder[] = (data as any[]).map((folder: any) => ({
         id: folder.id,
         name: folder.name,
