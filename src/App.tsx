@@ -6,11 +6,15 @@ import { NotesList } from './components/NotesList';
 import { NoteEditor } from './components/NoteEditor';
 import { NoteModal } from './components/NoteModal';
 import { SettingsPage } from './components/SettingsPage';
-// Hook personalizado para manejar notas con Supabase
-import { useSupabaseNotes } from './hooks/useSupabaseNotes';
+// Hooks especializados optimizados
+import { useAuth } from './hooks/useAuth';
+import { useNotes } from './hooks/useNotes';
+import { useFolders } from './hooks/useFolders';
+import { useNotesFilter } from './hooks/useNotesFilter';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
+import { cacheUtils } from './lib/queryClient';
 
 console.log('📱 App component module loading...');
 console.log('🔍 Environment check in App:', {
@@ -41,31 +45,29 @@ function App({ onGoToAdmin }: AppProps = {}) {
   const [showAdminSetup, setShowAdminSetup] = useState(false);
   console.log('🎛️ App state initialized');
   
-  // Hook que maneja toda la lógica de notas y autenticación
+  // Hooks especializados separados
+  const { user, loading: authLoading, isAuthenticated } = useAuth();
+  const { notes, loading: notesLoading, createNote, updateNote, deleteNote } = useNotes(user);
+  const { folders, loading: foldersLoading, createFolder, deleteFolder } = useFolders(user);
   const {
-    user,
-    loading,
-    notes,
-    folders,
+    filteredNotes,
     selectedFolderId,
     selectedDate,
-    setSelectedFolderId,
-    setSelectedDate,
-    createNote,
-    updateNote,
-    deleteNote,
-    createFolder,
-    deleteFolder,
-    getFilteredNotes,
-  } = useSupabaseNotes();
+    handleFolderSelect,
+    handleDateSelect,
+    filterStats,
+  } = useNotesFilter(notes);
 
   console.log('📊 App data state:', {
     user: user ? `authenticated (${user.email})` : 'not authenticated',
-    loading,
+    authLoading,
+    notesLoading,
+    foldersLoading,
     notesCount: notes.length,
     foldersCount: folders.length,
     selectedFolderId,
-    selectedDate: selectedDate?.toISOString()
+    selectedDate: selectedDate?.toISOString(),
+    filteredCount: filteredNotes.length
   });
 
   // Configurar usuario en el servicio de Gemini cuando cambia
@@ -80,6 +82,15 @@ function App({ onGoToAdmin }: AppProps = {}) {
       console.log('🔄 Gemini service user cleared');
     }
   }, [user]);
+
+  // Limpiar cache cuando el usuario se desconecta
+  useEffect(() => {
+    if (!user && !authLoading) {
+      console.log('🧹 Clearing user cache on logout...');
+      // Clear cache for any previous user
+      cacheUtils.clearUserCache('*');
+    }
+  }, [user, authLoading]);
 
   // Hook para manejar prompts de IA
   const {
@@ -142,14 +153,9 @@ function App({ onGoToAdmin }: AppProps = {}) {
     setEditingNote(null);
   }, [editingNote, updateNote, createNote]);
 
-  // Memoizar las notas filtradas para evitar recálculos innecesarios
-  const filteredNotes = useMemo(() => {
-    return getFilteredNotes();
-  }, [getFilteredNotes]);
-
-  // Memoizar callbacks para el sidebar
-  const handleFolderSelect = useCallback((folderId: string | null) => {
-    setSelectedFolderId(folderId);
+  // Callbacks optimizados para el sidebar
+  const optimizedFolderSelect = useCallback((folderId: string | null) => {
+    handleFolderSelect(folderId);
     // Si estamos en configuración, volver a la vista principal
     if (showSettings) {
       setShowSettings(false);
@@ -158,10 +164,10 @@ function App({ onGoToAdmin }: AppProps = {}) {
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
-  }, [setSelectedFolderId, showSettings]);
+  }, [handleFolderSelect, showSettings]);
 
-  const handleDateSelect = useCallback((date: Date | null) => {
-    setSelectedDate(date);
+  const optimizedDateSelect = useCallback((date: Date | null) => {
+    handleDateSelect(date);
     // Si estamos en configuración, volver a la vista principal
     if (showSettings) {
       setShowSettings(false);
@@ -170,10 +176,12 @@ function App({ onGoToAdmin }: AppProps = {}) {
     if (window.innerWidth < 1024) {
       setSidebarOpen(false);
     }
-  }, [setSelectedDate, showSettings]);
+  }, [handleDateSelect, showSettings]);
 
   // Mostrar pantalla de carga mientras se verifica la autenticación
-  if (loading) {
+  const isLoading = authLoading || (isAuthenticated && (notesLoading || foldersLoading));
+  
+  if (isLoading) {
     console.log('⏳ Rendering loading screen...');
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -207,8 +215,8 @@ function App({ onGoToAdmin }: AppProps = {}) {
         notes={notes}
         selectedFolderId={selectedFolderId}
         selectedDate={selectedDate}
-        onFolderSelect={handleFolderSelect}
-        onDateSelect={handleDateSelect}
+        onFolderSelect={optimizedFolderSelect}
+        onDateSelect={optimizedDateSelect}
         onCreateFolder={createFolder}
         onDeleteFolder={deleteFolder}
         onShowSettings={() => setShowSettings(true)}

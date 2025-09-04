@@ -1,86 +1,247 @@
-import { useState } from 'react';
-import { Note, Folder } from '../types';
-import { useLocalStorage } from './useLocalStorage';
+import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { supabase } from '../lib/supabase';
+import { Note } from '../types';
+import { User } from '@supabase/supabase-js';
 
-export function useNotes() {
-  const [notes, setNotes] = useLocalStorage<Note[]>('notes', []);
-  const [folders, setFolders] = useLocalStorage<Folder[]>('folders', []);
-  const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+/**
+ * Hook especializado para gestión de notas con cache optimizado
+ */
+export function useNotes(user: User | null) {
+  const queryClient = useQueryClient();
+  const [optimisticNotes, setOptimisticNotes] = useState<Note[]>([]);
 
-  const createNote = (title: string, content: string, folderId: string | null = null) => {
-    const newNote: Note = {
-      id: crypto.randomUUID(),
-      title,
-      content,
-      folderId,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      tags: [],
-    };
-    setNotes(prev => [newNote, ...prev]);
-    return newNote;
-  };
+  // Query para cargar notas con cache
+  const {
+    data: notes = [],
+    isLoading: loading,
+    error,
+    refetch: refetchNotes
+  } = useQuery({
+    queryKey: ['notes', user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+      
+      console.log('📝 Loading notes from Supabase...');
+      
+      const { data, error } = await (supabase as any)
+        .from('notes')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-  const updateNote = (id: string, updates: Partial<Note>) => {
-    setNotes(prev => prev.map(note => 
-      note.id === id 
-        ? { ...note, ...updates, updatedAt: new Date() }
-        : note
-    ));
-  };
+      if (error) throw error;
 
-  const deleteNote = (id: string) => {
-    setNotes(prev => prev.filter(note => note.id !== id));
-  };
+      const loadedNotes: Note[] = (data as any[]).map((note: any) => ({
+        id: note.id,
+        title: note.title,
+        content: note.content || '',
+        folderId: note.folder_id,
+        tags: note.tags || [],
+        createdAt: new Date(note.created_at),
+        updatedAt: new Date(note.updated_at),
+      }));
 
-  const createFolder = (name: string, color: string) => {
-    const newFolder: Folder = {
-      id: crypto.randomUUID(),
-      name,
-      color,
-      createdAt: new Date(),
-    };
-    setFolders(prev => [...prev, newFolder]);
-    return newFolder;
-  };
+      console.log('✅ Notes loaded successfully:', loadedNotes.length);
+      return loadedNotes;
+    },
+    enabled: !!user,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+  });
 
-  const deleteFolder = (id: string) => {
-    setFolders(prev => prev.filter(folder => folder.id !== id));
-    setNotes(prev => prev.map(note => 
-      note.folderId === id ? { ...note, folderId: null } : note
-    ));
-  };
+  // Mutation para crear nota
+  const createNoteMutation = useMutation({
+    mutationFn: async ({ title, content, folderId }: { title: string; content: string; folderId: string | null }) => {
+      if (!user) throw new Error('User not authenticated');
 
-  const getFilteredNotes = () => {
-    let filtered = notes;
+      console.log('➕ Creating note:', { title, folderId });
+      
+      const { data, error } = await (supabase as any)
+        .from('notes')
+        .insert({
+          title,
+          content,
+          folder_id: folderId,
+          user_id: user.id,
+        })
+        .select('*')
+        .single();
 
-    if (selectedFolderId) {
-      filtered = filtered.filter(note => note.folderId === selectedFolderId);
-    }
+      if (error) throw error;
 
-    if (selectedDate) {
-      const dateStr = selectedDate.toDateString();
-      filtered = filtered.filter(note => 
-        new Date(note.createdAt).toDateString() === dateStr
+      const newNote: Note = {
+        id: data.id,
+        title: data.title,
+        content: data.content || '',
+        folderId: data.folder_id,
+        tags: data.tags || [],
+        createdAt: new Date(data.created_at),
+        updatedAt: new Date(data.updated_at),
+      };
+
+      return newNote;
+    },
+    onMutate: async ({ title, content, folderId }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['notes', user?.id] });
+      
+      const previousNotes = queryClient.getQueryData(['notes', user?.id]) as Note[] || [];
+      
+      const optimisticNote: Note = {
+        id: `temp-${Date.now()}`,
+        title,
+        content,
+        folderId,
+        tags: [],
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+
+      queryClient.setQueryData(['notes', user?.id], [optimisticNote, ...previousNotes]);
+      
+      return { previousNotes };
+    },
+    onError: (error, variables, context) => {
+      console.error('❌ Error creating note:', error);
+      // Rollback optimistic update
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['notes', user?.id], context.previousNotes);
+      }
+    },
+    onSuccess: (newNote) => {
+      console.log('✅ Note created successfully:', newNote.id);
+      // Update cache with real note
+      queryClient.setQueryData(['notes', user?.id], (old: Note[] = []) => {
+        const filtered = old.filter(note => !note.id.startsWith('temp-'));
+        return [newNote, ...filtered];
+      });
+    },
+  });
+
+  // Mutation para actualizar nota
+  const updateNoteMutation = useMutation({
+    mutationFn: async ({ id, updates }: { id: string; updates: Partial<Note> }) => {
+      if (!user) throw new Error('User not authenticated');
+
+      console.log('✏️ Updating note:', id);
+      
+      const supabaseUpdates: any = { ...updates };
+      if ('folderId' in updates) {
+        supabaseUpdates.folder_id = updates.folderId;
+        delete supabaseUpdates.folderId;
+      }
+      delete supabaseUpdates.createdAt;
+      delete supabaseUpdates.updatedAt;
+      delete supabaseUpdates.id;
+
+      const { error } = await (supabase as any)
+        .from('notes')
+        .update({
+          ...supabaseUpdates,
+          updated_at: new Date().toISOString(),
+        })
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      return { id, updates };
+    },
+    onMutate: async ({ id, updates }) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['notes', user?.id] });
+      
+      const previousNotes = queryClient.getQueryData(['notes', user?.id]) as Note[] || [];
+      
+      queryClient.setQueryData(['notes', user?.id], (old: Note[] = []) =>
+        old.map(note => 
+          note.id === id 
+            ? { ...note, ...updates, updatedAt: new Date() }
+            : note
+        )
       );
-    }
+      
+      return { previousNotes };
+    },
+    onError: (error, variables, context) => {
+      console.error('❌ Error updating note:', error);
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['notes', user?.id], context.previousNotes);
+      }
+    },
+    onSuccess: ({ id }) => {
+      console.log('✅ Note updated successfully:', id);
+    },
+  });
 
-    return filtered;
-  };
+  // Mutation para eliminar nota
+  const deleteNoteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      if (!user) throw new Error('User not authenticated');
+
+      console.log('🗑️ Deleting note:', id);
+      
+      const { error } = await (supabase as any)
+        .from('notes')
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
+      return id;
+    },
+    onMutate: async (id) => {
+      // Optimistic update
+      await queryClient.cancelQueries({ queryKey: ['notes', user?.id] });
+      
+      const previousNotes = queryClient.getQueryData(['notes', user?.id]) as Note[] || [];
+      
+      queryClient.setQueryData(['notes', user?.id], (old: Note[] = []) =>
+        old.filter(note => note.id !== id)
+      );
+      
+      return { previousNotes };
+    },
+    onError: (error, id, context) => {
+      console.error('❌ Error deleting note:', error);
+      if (context?.previousNotes) {
+        queryClient.setQueryData(['notes', user?.id], context.previousNotes);
+      }
+    },
+    onSuccess: (id) => {
+      console.log('✅ Note deleted successfully:', id);
+    },
+  });
+
+  // Funciones públicas del hook
+  const createNote = useCallback(async (title: string, content: string, folderId: string | null = null) => {
+    return createNoteMutation.mutateAsync({ title, content, folderId });
+  }, [createNoteMutation]);
+
+  const updateNote = useCallback(async (id: string, updates: Partial<Note>) => {
+    return updateNoteMutation.mutateAsync({ id, updates });
+  }, [updateNoteMutation]);
+
+  const deleteNote = useCallback(async (id: string) => {
+    return deleteNoteMutation.mutateAsync(id);
+  }, [deleteNoteMutation]);
+
+  const refreshNotes = useCallback(() => {
+    return refetchNotes();
+  }, [refetchNotes]);
 
   return {
     notes,
-    folders,
-    selectedFolderId,
-    selectedDate,
-    setSelectedFolderId,
-    setSelectedDate,
+    loading,
+    error: error?.message || null,
     createNote,
     updateNote,
     deleteNote,
-    createFolder,
-    deleteFolder,
-    getFilteredNotes,
+    refreshNotes,
+    isCreating: createNoteMutation.isPending,
+    isUpdating: updateNoteMutation.isPending,
+    isDeleting: deleteNoteMutation.isPending,
   };
 }

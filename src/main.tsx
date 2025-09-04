@@ -1,7 +1,10 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { QueryClientProvider } from '@tanstack/react-query'
+import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
 import './index.css'
 import { Router } from './components/Router'
+import { queryClient } from './lib/queryClient'
 
 // Production deployment debugging
 console.log('🚀 Starting NotesApp...');
@@ -36,7 +39,10 @@ try {
   console.log('🎯 Rendering App component...');
   root.render(
     <StrictMode>
-      <Router />
+      <QueryClientProvider client={queryClient}>
+        <Router />
+        {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
+      </QueryClientProvider>
     </StrictMode>,
   );
   console.log('✅ App component rendered successfully');
