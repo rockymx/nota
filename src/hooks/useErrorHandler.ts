@@ -203,7 +203,6 @@ export function useErrorHandler() {
       context = {},
     } = options;
 
-    const finalRetryConfig = retryConfig || {
     const finalRetryConfig = {
       maxRetries: RETRY_CONFIG.MAX_RETRIES,
       initialDelay: RETRY_CONFIG.INITIAL_DELAY,
