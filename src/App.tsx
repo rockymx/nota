@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Menu, Plus } from 'lucide-react';
+import { ErrorBoundary } from './components/ErrorBoundary';
 // Componentes principales de la aplicación
 import { Sidebar } from './components/Sidebar';
 import { NotesList } from './components/NotesList';
@@ -14,6 +15,7 @@ import { useNotesFilter } from './hooks/useNotesFilter';
 import { useAIPrompts } from './hooks/useAIPrompts';
 import { useToast } from './hooks/useToast';
 import { ToastContainer } from './components/ToastContainer';
+import { useErrorHandler } from './hooks/useErrorHandler';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
 import { cacheUtils } from './lib/queryClient';
@@ -46,6 +48,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
   const [showSettings, setShowSettings] = useState(false);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
   const { toasts, removeToast } = useToast();
+  const errorHandler = useErrorHandler();
   console.log('🎛️ App state initialized');
   
   // Hooks especializados separados
@@ -77,6 +80,10 @@ function App({ onGoToAdmin }: AppProps = {}) {
   useEffect(() => {
     console.log('🤖 Gemini service setup effect triggered');
     console.log('👤 User for Gemini:', user?.id || 'none');
+    
+    // Configurar error handler en Gemini service
+    geminiService.setErrorHandler(errorHandler);
+    
     if (user) {
       geminiService.setUser(user.id);
       console.log('✅ Gemini service user set');
@@ -84,7 +91,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
       geminiService.setUser(null);
       console.log('🔄 Gemini service user cleared');
     }
-  }, [user]);
+  }, [user, errorHandler]);
 
   // Limpiar cache cuando el usuario se desconecta
   useEffect(() => {
@@ -209,95 +216,97 @@ function App({ onGoToAdmin }: AppProps = {}) {
 
   console.log('🎯 About to render main app JSX...');
   return (
-    <div className="flex h-screen bg-app transition-colors duration-300">
-      {/* Barra lateral con carpetas y calendario */}
-      <Sidebar
-        isOpen={sidebarOpen}
-        onToggle={() => setSidebarOpen(!sidebarOpen)}
-        folders={folders}
-        notes={notes}
-        selectedFolderId={selectedFolderId}
-        selectedDate={selectedDate}
-        onFolderSelect={optimizedFolderSelect}
-        onDateSelect={optimizedDateSelect}
-        onCreateFolder={createFolder}
-        onDeleteFolder={deleteFolder}
-        onRestoreFolder={restoreFolder}
-        onShowSettings={() => setShowSettings(true)}
-        onShowAdmin={onGoToAdmin}
-      />
-
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col">
-        {/* Área de contenido - Editor o Lista de notas */}
-        <main className="flex-1 overflow-hidden relative bg-app">
-          {/* Botón de menú hamburguesa flotante para móvil */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            className="fixed top-4 left-4 z-30 p-3 bg-app rounded-lg shadow-app-lg hover:bg-app-secondary transition-all duration-200 lg:hidden border border-app"
-          >
-            <Menu className="w-5 h-5" />
-          </button>
-
-          {/* Botón flotante para crear nueva nota */}
-          <button
-            onClick={handleCreateNote}
-            className="fixed bottom-6 right-6 z-30 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-4 rounded-full shadow-app-lg transition-all duration-200 flex items-center gap-2 hover:scale-105"
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-
-          {showEditor ? (
-            <NoteEditor
-              note={editingNote}
-              folders={folders}
-              aiPrompts={aiPrompts}
-              hiddenPromptIds={hiddenPromptIds}
-              onSave={handleSaveNote}
-              onClose={() => setShowEditor(false)}
-            />
-          ) : showSettings ? (
-            <SettingsPage
-              user={user!}
-              onBack={() => setShowSettings(false)}
-              totalNotes={notes.length}
-              totalFolders={folders.length}
-              aiPrompts={aiPrompts}
-              hiddenPromptIds={hiddenPromptIds}
-              onCreatePrompt={createPrompt}
-              onUpdatePrompt={updatePrompt}
-              onDeletePrompt={deletePrompt}
-              onHideDefaultPrompt={hideDefaultPrompt}
-              onShowDefaultPrompt={showDefaultPrompt}
-            />
-          ) : (
-            <NotesList
-              notes={filteredNotes}
-              folders={folders}
-              onEditNote={handleEditNote}
-              onDeleteNote={deleteNote}
-              onViewNote={handleViewNote}
-            />
-          )}
-        </main>
-      </div>
-
-      {/* Modal para ver nota */}
-      {viewingNote && (
-        <NoteModal
-          note={viewingNote}
+    <ErrorBoundary>
+      <div className="flex h-screen bg-app transition-colors duration-300">
+        {/* Barra lateral con carpetas y calendario */}
+        <Sidebar
+          isOpen={sidebarOpen}
+          onToggle={() => setSidebarOpen(!sidebarOpen)}
           folders={folders}
-          onClose={() => setViewingNote(null)}
-          onEdit={handleEditNote}
+          notes={notes}
+          selectedFolderId={selectedFolderId}
+          selectedDate={selectedDate}
+          onFolderSelect={optimizedFolderSelect}
+          onDateSelect={optimizedDateSelect}
+          onCreateFolder={createFolder}
+          onDeleteFolder={deleteFolder}
+          onRestoreFolder={restoreFolder}
+          onShowSettings={() => setShowSettings(true)}
+          onShowAdmin={onGoToAdmin}
         />
-      )}
 
-      {/* Sistema de toasts */}
-      <ToastContainer
-        toasts={toasts}
-        onDismiss={removeToast}
-      />
-    </div>
+        {/* Contenido principal */}
+        <div className="flex-1 flex flex-col">
+          {/* Área de contenido - Editor o Lista de notas */}
+          <main className="flex-1 overflow-hidden relative bg-app">
+            {/* Botón de menú hamburguesa flotante para móvil */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="fixed top-4 left-4 z-30 p-3 bg-app rounded-lg shadow-app-lg hover:bg-app-secondary transition-all duration-200 lg:hidden border border-app"
+            >
+              <Menu className="w-5 h-5" />
+            </button>
+
+            {/* Botón flotante para crear nueva nota */}
+            <button
+              onClick={handleCreateNote}
+              className="fixed bottom-6 right-6 z-30 bg-blue-500 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 text-white p-4 rounded-full shadow-app-lg transition-all duration-200 flex items-center gap-2 hover:scale-105"
+            >
+              <Plus className="w-6 h-6" />
+            </button>
+
+            {showEditor ? (
+              <NoteEditor
+                note={editingNote}
+                folders={folders}
+                aiPrompts={aiPrompts}
+                hiddenPromptIds={hiddenPromptIds}
+                onSave={handleSaveNote}
+                onClose={() => setShowEditor(false)}
+              />
+            ) : showSettings ? (
+              <SettingsPage
+                user={user!}
+                onBack={() => setShowSettings(false)}
+                totalNotes={notes.length}
+                totalFolders={folders.length}
+                aiPrompts={aiPrompts}
+                hiddenPromptIds={hiddenPromptIds}
+                onCreatePrompt={createPrompt}
+                onUpdatePrompt={updatePrompt}
+                onDeletePrompt={deletePrompt}
+                onHideDefaultPrompt={hideDefaultPrompt}
+                onShowDefaultPrompt={showDefaultPrompt}
+              />
+            ) : (
+              <NotesList
+                notes={filteredNotes}
+                folders={folders}
+                onEditNote={handleEditNote}
+                onDeleteNote={deleteNote}
+                onViewNote={handleViewNote}
+              />
+            )}
+          </main>
+        </div>
+
+        {/* Modal para ver nota */}
+        {viewingNote && (
+          <NoteModal
+            note={viewingNote}
+            folders={folders}
+            onClose={() => setViewingNote(null)}
+            onEdit={handleEditNote}
+          />
+        )}
+
+        {/* Sistema de toasts */}
+        <ToastContainer
+          toasts={toasts}
+          onDismiss={removeToast}
+        />
+      </div>
+    </ErrorBoundary>
   );
 }
 

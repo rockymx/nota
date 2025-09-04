@@ -1,4 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
+import { CACHE_CONFIG, RETRY_CONFIG } from '../config/constants';
 
 /**
  * Configuración del cliente de React Query
@@ -8,8 +9,8 @@ export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       // Configuración por defecto para queries
-      staleTime: 5 * 60 * 1000, // 5 minutos - datos considerados frescos
-      gcTime: 10 * 60 * 1000, // 10 minutos - tiempo en cache
+      staleTime: CACHE_CONFIG.STALE_TIME,
+      gcTime: CACHE_CONFIG.GC_TIME,
       retry: (failureCount, error) => {
         // No reintentar en errores de autenticación
         if (error instanceof Error) {
@@ -21,9 +22,12 @@ export const queryClient = new QueryClient({
           }
         }
         // Reintentar hasta 3 veces para otros errores
-        return failureCount < 3;
+        return failureCount < RETRY_CONFIG.MAX_RETRIES;
       },
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex) => Math.min(
+        RETRY_CONFIG.INITIAL_DELAY * (RETRY_CONFIG.BACKOFF_FACTOR ** attemptIndex), 
+        RETRY_CONFIG.MAX_DELAY
+      ),
     },
     mutations: {
       // Configuración por defecto para mutations

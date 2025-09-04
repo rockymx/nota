@@ -1,15 +1,16 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '../lib/supabase';
+import { useSupabaseClient } from './useSupabaseClient';
 import { Note } from '../types';
 import { User } from '@supabase/supabase-js';
+import { CACHE_CONFIG } from '../config/constants';
 
 /**
  * Hook especializado para gestión de notas con cache optimizado
  */
 export function useNotes(user: User | null) {
   const queryClient = useQueryClient();
-  const [optimisticNotes, setOptimisticNotes] = useState<Note[]>([]);
+  const { operations } = useSupabaseClient();
 
   // Query para cargar notas con cache
   const {
@@ -22,17 +23,10 @@ export function useNotes(user: User | null) {
     queryFn: async () => {
       if (!user) return [];
       
-      console.log('📝 Loading notes from Supabase...');
-      
-      const { data, error } = await (supabase as any)
-        .from('notes')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const data = await operations.notes.select(user.id);
+      if (!data) return [];
 
-      if (error) throw error;
-
-      const loadedNotes: Note[] = (data as any[]).map((note: any) => ({
+      const loadedNotes: Note[] = data.map((note: any) => ({
         id: note.id,
         title: note.title,
         content: note.content || '',
@@ -42,12 +36,11 @@ export function useNotes(user: User | null) {
         updatedAt: new Date(note.updated_at),
       }));
 
-      console.log('✅ Notes loaded successfully:', loadedNotes.length);
       return loadedNotes;
     },
     enabled: !!user,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: CACHE_CONFIG.STALE_TIME,
+    gcTime: CACHE_CONFIG.GC_TIME,
   });
 
   // Mutation para crear nota
@@ -55,20 +48,14 @@ export function useNotes(user: User | null) {
     mutationFn: async ({ title, content, folderId }: { title: string; content: string; folderId: string | null }) => {
       if (!user) throw new Error('User not authenticated');
 
-      console.log('➕ Creating note:', { title, folderId });
-      
-      const { data, error } = await (supabase as any)
-        .from('notes')
-        .insert({
-          title,
-          content,
-          folder_id: folderId,
-          user_id: user.id,
-        })
-        .select('*')
-        .single();
+      const data = await operations.notes.insert({
+        title,
+        content,
+        folder_id: folderId,
+        user_id: user.id,
+      });
 
-      if (error) throw error;
+      if (!data) throw new Error('Failed to create note');
 
       const newNote: Note = {
         id: data.id,
@@ -103,14 +90,12 @@ export function useNotes(user: User | null) {
       return { previousNotes };
     },
     onError: (error, variables, context) => {
-      console.error('❌ Error creating note:', error);
       // Rollback optimistic update
       if (context?.previousNotes) {
         queryClient.setQueryData(['notes', user?.id], context.previousNotes);
       }
     },
     onSuccess: (newNote) => {
-      console.log('✅ Note created successfully:', newNote.id);
       // Update cache with real note
       queryClient.setQueryData(['notes', user?.id], (old: Note[] = []) => {
         const filtered = old.filter(note => !note.id.startsWith('temp-'));
@@ -124,8 +109,6 @@ export function useNotes(user: User | null) {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Note> }) => {
       if (!user) throw new Error('User not authenticated');
 
-      console.log('✏️ Updating note:', id);
-      
       const supabaseUpdates: any = { ...updates };
       if ('folderId' in updates) {
         supabaseUpdates.folder_id = updates.folderId;
@@ -135,16 +118,10 @@ export function useNotes(user: User | null) {
       delete supabaseUpdates.updatedAt;
       delete supabaseUpdates.id;
 
-      const { error } = await (supabase as any)
-        .from('notes')
-        .update({
-          ...supabaseUpdates,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await operations.notes.update(id, user.id, {
+        ...supabaseUpdates,
+        updated_at: new Date().toISOString(),
+      });
 
       return { id, updates };
     },
@@ -165,13 +142,11 @@ export function useNotes(user: User | null) {
       return { previousNotes };
     },
     onError: (error, variables, context) => {
-      console.error('❌ Error updating note:', error);
       if (context?.previousNotes) {
         queryClient.setQueryData(['notes', user?.id], context.previousNotes);
       }
     },
     onSuccess: ({ id }) => {
-      console.log('✅ Note updated successfully:', id);
     },
   });
 
@@ -180,15 +155,7 @@ export function useNotes(user: User | null) {
     mutationFn: async (id: string) => {
       if (!user) throw new Error('User not authenticated');
 
-      console.log('🗑️ Deleting note:', id);
-      
-      const { error } = await (supabase as any)
-        .from('notes')
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await operations.notes.delete(id, user.id);
 
       return id;
     },
@@ -205,13 +172,11 @@ export function useNotes(user: User | null) {
       return { previousNotes };
     },
     onError: (error, id, context) => {
-      console.error('❌ Error deleting note:', error);
       if (context?.previousNotes) {
         queryClient.setQueryData(['notes', user?.id], context.previousNotes);
       }
     },
     onSuccess: (id) => {
-      console.log('✅ Note deleted successfully:', id);
     },
   });
 
