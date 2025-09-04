@@ -156,6 +156,26 @@ export function useSupabaseClient() {
         'delete_ai_prompt'
       ),
     },
+
+    // Operaciones de prompts ocultos
+    hiddenPrompts: {
+      select: (userId: string) => query(
+        () => (supabase as any).from('hidden_prompts').select('*').eq('user_id', userId),
+        'load_hidden_prompts'
+      ),
+      
+      insert: (hiddenPromptData: any) => mutate(
+        () => (supabase as any).from('hidden_prompts').insert(hiddenPromptData).select('*').single(),
+        'create_hidden_prompt',
+        TIMEOUTS.DATABASE,
+        { table: 'hidden_prompts', data: hiddenPromptData }
+      ),
+      
+      delete: (promptId: string, userId: string) => mutate(
+        () => (supabase as any).from('hidden_prompts').delete().eq('prompt_id', promptId).eq('user_id', userId),
+        'delete_hidden_prompt'
+      ),
+    },
   };
 
   return {
