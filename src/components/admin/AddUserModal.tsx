@@ -1,36 +1,47 @@
 import React, { useState } from 'react';
 import { X, UserPlus, Mail, Lock, Eye, EyeOff } from 'lucide-react';
+import { useFormValidation } from '../../hooks/useFormValidation';
+import { schemas } from '../../lib/validation';
+import { ValidatedInput } from '../forms/ValidatedInput';
+import { z } from 'zod';
 
 interface AddUserModalProps {
   onClose: () => void;
   onAddUser: (email: string, password: string) => Promise<boolean>;
 }
 
+const createUserSchema = z.object({
+  email: schemas.email,
+  password: schemas.password,
+  confirmPassword: schemas.password,
+}).refine(data => data.password === data.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
+});
 export function AddUserModal({ onClose, onAddUser }: AddUserModalProps) {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
+  const {
+    fields,
+    formState,
+    getFieldProps,
+    validateForm,
+  } = useFormValidation(createUserSchema, {
+    email: '',
+    password: '',
+    confirmPassword: '',
+  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!email.trim()) {
-      setError('Ingresa un email válido');
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('La contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setError('Las contraseñas no coinciden');
+    const validation = validateForm();
+    if (!validation.valid) {
+      const firstError = Object.values(validation.errors)[0];
+      setError(firstError || 'Por favor corrige los errores en el formulario');
       return;
     }
 
@@ -39,12 +50,10 @@ export function AddUserModal({ onClose, onAddUser }: AddUserModalProps) {
     setSuccess('');
 
     try {
-      const result = await onAddUser(email.trim(), password);
+      const { email, password } = validation.data!;
+      const result = await onAddUser(email, password);
       if (result) {
         setSuccess('Usuario creado exitosamente');
-        setEmail('');
-        setPassword('');
-        setConfirmPassword('');
         setTimeout(() => {
           onClose();
         }, 1500);
@@ -92,73 +101,54 @@ export function AddUserModal({ onClose, onAddUser }: AddUserModalProps) {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Email del usuario
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-app-tertiary" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="usuario@ejemplo.com"
-                className="w-full pl-10 pr-4 py-2 border border-app rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
-                required
-                autoFocus
-              />
-            </div>
-          </div>
+          <ValidatedInput
+            {...getFieldProps('email')}
+            type="email"
+            label="Email del usuario"
+            placeholder="usuario@ejemplo.com"
+            leftIcon={<Mail className="w-4 h-4" />}
+            required
+            autoFocus
+            showValidIcon
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-app-tertiary" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Mínimo 6 caracteres"
-                className="w-full pl-10 pr-12 py-2 border border-app rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
-                required
-                minLength={6}
-              />
+          <ValidatedInput
+            {...getFieldProps('password')}
+            type={showPassword ? 'text' : 'password'}
+            label="Contraseña"
+            placeholder="Mínimo 6 caracteres"
+            leftIcon={<Lock className="w-4 h-4" />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-app-tertiary hover:text-app-secondary"
+                className="text-app-tertiary hover:text-app-secondary"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
-            </div>
-          </div>
+            }
+            required
+            showValidIcon
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Confirmar contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-app-tertiary" />
-              <input
-                type={showConfirmPassword ? 'text' : 'password'}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Repite la contraseña"
-                className="w-full pl-10 pr-12 py-2 border border-app rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
-                required
-                minLength={6}
-              />
+          <ValidatedInput
+            {...getFieldProps('confirmPassword')}
+            type={showConfirmPassword ? 'text' : 'password'}
+            label="Confirmar contraseña"
+            placeholder="Repite la contraseña"
+            leftIcon={<Lock className="w-4 h-4" />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-app-tertiary hover:text-app-secondary"
+                className="text-app-tertiary hover:text-app-secondary"
               >
                 {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
-            </div>
-          </div>
+            }
+            required
+            showValidIcon
+          />
 
           <div className="flex gap-3 pt-4">
             <button
@@ -170,7 +160,7 @@ export function AddUserModal({ onClose, onAddUser }: AddUserModalProps) {
             </button>
             <button
               type="submit"
-              disabled={loading || !email.trim() || !password.trim() || !confirmPassword.trim()}
+              disabled={loading || !formState.isValid}
               className="flex-1 bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
               {loading ? (

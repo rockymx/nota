@@ -2,6 +2,7 @@ import { useCallback } from 'react';
 import { supabase } from '../lib/supabase';
 import { useErrorHandler } from './useErrorHandler';
 import { TIMEOUTS } from '../config/constants';
+import { ValidationInterceptor, validateAndSanitize, entitySchemas } from '../lib/validation';
 
 /**
  * Hook para operaciones de Supabase con manejo de errores centralizado
@@ -38,9 +39,19 @@ export function useSupabaseClient() {
   const mutate = useCallback(async <T>(
     operation: () => Promise<{ data: T; error: any }>,
     operationName: string,
-    timeout: number = TIMEOUTS.DATABASE
+    timeout: number = TIMEOUTS.DATABASE,
+    validationData?: { table: string; data: any }
   ): Promise<T | null> => {
     return withDatabaseErrorHandling(async () => {
+      // Validar datos antes de la operación si se proporciona
+      if (validationData) {
+        try {
+          ValidationInterceptor.validateBeforeInsert(validationData.table, validationData.data);
+        } catch (validationError) {
+          throw new Error(`Validación fallida: ${validationError instanceof Error ? validationError.message : 'Error desconocido'}`);
+        }
+      }
+      
       const timeoutPromise = new Promise((_, reject) => 
         setTimeout(() => reject(new Error(`${operationName} timeout after ${timeout}ms`)), timeout)
       );
@@ -68,12 +79,16 @@ export function useSupabaseClient() {
       
       insert: (noteData: any) => mutate(
         () => (supabase as any).from('notes').insert(noteData).select('*').single(),
-        'create_note'
+        'create_note',
+        TIMEOUTS.DATABASE,
+        { table: 'notes', data: noteData }
       ),
       
       update: (id: string, userId: string, updates: any) => mutate(
         () => (supabase as any).from('notes').update(updates).eq('id', id).eq('user_id', userId),
-        'update_note'
+        'update_note',
+        TIMEOUTS.DATABASE,
+        { table: 'notes', data: updates }
       ),
       
       delete: (id: string, userId: string) => mutate(
@@ -91,7 +106,9 @@ export function useSupabaseClient() {
       
       insert: (folderData: any) => mutate(
         () => (supabase as any).from('folders').insert(folderData).select('*').single(),
-        'create_folder'
+        'create_folder',
+        TIMEOUTS.DATABASE,
+        { table: 'folders', data: folderData }
       ),
       
       delete: (id: string, userId: string) => mutate(
@@ -122,12 +139,16 @@ export function useSupabaseClient() {
       
       insert: (promptData: any) => mutate(
         () => (supabase as any).from('ai_prompts').insert(promptData).select('*').single(),
-        'create_ai_prompt'
+       'create_ai_prompt',
+       TIMEOUTS.DATABASE,
+       { table: 'ai_prompts', data: promptData }
       ),
       
       update: (id: string, userId: string, updates: any) => mutate(
         () => (supabase as any).from('ai_prompts').update(updates).eq('id', id).eq('user_id', userId),
-        'update_ai_prompt'
+       'update_ai_prompt',
+       TIMEOUTS.DATABASE,
+       { table: 'ai_prompts', data: updates }
       ),
       
       delete: (id: string, userId: string) => mutate(

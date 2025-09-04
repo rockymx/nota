@@ -4,6 +4,7 @@ import { useSupabaseClient } from './useSupabaseClient';
 import { Folder, Note } from '../types';
 import { User } from '@supabase/supabase-js';
 import { CACHE_CONFIG } from '../config/constants';
+import { validateAndSanitize, entitySchemas } from '../lib/validation';
 
 /**
  * Hook especializado para gestión de carpetas con cache optimizado
@@ -45,9 +46,14 @@ export function useFolders(user: User | null) {
     mutationFn: async ({ name, color }: { name: string; color: string }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const data = await operations.folders.insert({
+      // Validar y sanitizar datos antes de enviar
+      const validatedData = validateAndSanitize(entitySchemas.folder, {
         name,
         color,
+      });
+      const data = await operations.folders.insert({
+        name: validatedData.name,
+        color: validatedData.color,
         user_id: user.id,
       });
 
@@ -55,8 +61,8 @@ export function useFolders(user: User | null) {
 
       const newFolder: Folder = {
         id: data.id,
-        name: data.name,
-        color: data.color,
+        name: validatedData.name,
+        color: validatedData.color,
         createdAt: new Date(data.created_at),
       };
 

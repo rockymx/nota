@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { X, Sparkles, Save } from 'lucide-react';
 import { AIPrompt } from '../types';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { entitySchemas } from '../lib/validation';
+import { ValidatedInput } from './forms/ValidatedInput';
+import { ValidatedTextarea } from './forms/ValidatedTextarea';
 
 interface CreatePromptModalProps {
   onClose: () => void;
@@ -18,27 +22,41 @@ const CATEGORIES = [
 ];
 
 export function CreatePromptModal({ onClose, onCreatePrompt, editingPrompt }: CreatePromptModalProps) {
-  const [name, setName] = useState(editingPrompt?.name || '');
-  const [description, setDescription] = useState(editingPrompt?.description || '');
-  const [promptTemplate, setPromptTemplate] = useState(editingPrompt?.promptTemplate || '');
-  const [category, setCategory] = useState(editingPrompt?.category || 'custom');
-  const [loading, setLoading] = useState(false);
+  const {
+    fields,
+    formState,
+    getFieldProps,
+    validateForm,
+    setFieldValue,
+  } = useFormValidation(entitySchemas.aiPrompt, {
+    name: editingPrompt?.name || '',
+    description: editingPrompt?.description || '',
+    promptTemplate: editingPrompt?.promptTemplate || '',
+    category: editingPrompt?.category || 'custom',
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!name.trim() || !description.trim() || !promptTemplate.trim()) {
+    const validation = validateForm();
+    if (!validation.valid) {
+      console.log('❌ Prompt form validation failed:', validation.errors);
       return;
     }
 
-    setLoading(true);
+    console.log('✅ Prompt form validation passed:', validation.data);
+    setIsSubmitting(true);
+    
     try {
-      await onCreatePrompt(name.trim(), description.trim(), promptTemplate.trim(), category);
+      const data = validation.data!;
+      await onCreatePrompt(data.name, data.description, data.promptTemplate, data.category);
       onClose();
     } catch (error) {
       console.error('Error creating prompt:', error);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -63,16 +81,13 @@ export function CreatePromptModal({ onClose, onCreatePrompt, editingPrompt }: Cr
         <form onSubmit={handleSubmit} className="p-6 space-y-6 overflow-y-auto max-h-[calc(90vh-140px)]">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-app-primary mb-2">
-                Nombre del prompt
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+              <ValidatedInput
+                {...getFieldProps('name')}
+                label="Nombre del prompt"
                 placeholder="Ej: Mejorar gramática"
-                className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
                 required
+                showValidIcon
+                helperText="Entre 3 y 100 caracteres"
               />
             </div>
 
@@ -81,8 +96,8 @@ export function CreatePromptModal({ onClose, onCreatePrompt, editingPrompt }: Cr
                 Categoría
               </label>
               <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
+                value={fields.category?.value || 'custom'}
+                onChange={(e) => setFieldValue('category', e.target.value)}
                 className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary"
               >
                 {CATEGORIES.map(cat => (
@@ -95,34 +110,28 @@ export function CreatePromptModal({ onClose, onCreatePrompt, editingPrompt }: Cr
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Descripción
-            </label>
-            <input
-              type="text"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
+            <ValidatedInput
+              {...getFieldProps('description')}
+              label="Descripción"
               placeholder="Describe qué hace este prompt..."
-              className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
               required
+              showValidIcon
+              helperText="Entre 10 y 500 caracteres"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Plantilla del prompt
-            </label>
-            <textarea
-              value={promptTemplate}
-              onChange={(e) => setPromptTemplate(e.target.value)}
+            <ValidatedTextarea
+              {...getFieldProps('promptTemplate')}
+              label="Plantilla del prompt"
               placeholder="Escribe tu prompt aquí. Usa {content} donde quieras insertar el contenido de la nota..."
               rows={8}
-              className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-colors resize-none bg-app text-app-primary placeholder-app-tertiary"
               required
+              showValidIcon
+              showCharCount
+              maxLength={5000}
+              helperText="Debe incluir {content} y puede usar {title}, {tags}"
             />
-            <p className="text-xs text-app-tertiary mt-1">
-              💡 Tip: Usa <code className="bg-app-secondary px-1 rounded">{'{content}'}</code> para insertar el contenido de la nota
-            </p>
           </div>
 
           <div className="flex gap-3 pt-4 border-t border-app">
@@ -135,10 +144,10 @@ export function CreatePromptModal({ onClose, onCreatePrompt, editingPrompt }: Cr
             </button>
             <button
               type="submit"
-              disabled={loading || !name.trim() || !description.trim() || !promptTemplate.trim()}
+              disabled={!formState.isValid || isSubmitting}
               className="flex-1 bg-purple-500 hover:bg-purple-600 disabled:bg-purple-300 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
             >
-              {loading ? (
+              {isSubmitting ? (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
                 <>

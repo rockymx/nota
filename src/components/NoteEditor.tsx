@@ -5,6 +5,10 @@ import { AIPrompt } from '../types';
 import { geminiService } from '../services/geminiService';
 import { PromptSelector } from './PromptSelector';
 import { MarkdownRenderer } from './MarkdownRenderer';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { entitySchemas, customValidators, VALIDATION_LIMITS } from '../lib/validation';
+import { ValidatedInput } from './forms/ValidatedInput';
+import { ValidatedTextarea } from './forms/ValidatedTextarea';
 
 /**
  * Componente para editar y crear notas
@@ -21,13 +25,23 @@ interface NoteEditorProps {
 
 export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, onClose }: NoteEditorProps) {
   // Estados del editor
-  const [title, setTitle] = useState('');
-  const [content, setContent] = useState('');
   const [selectedFolderId, setSelectedFolderId] = useState<string | null>(null);
   const [aiLoading, setAiLoading] = useState(false);
   const [aiError, setAiError] = useState('');
   const [showPreview, setShowPreview] = useState(false);
 
+  const {
+    fields,
+    formState,
+    getFieldProps,
+    validateForm,
+    setFieldValue,
+    resetForm,
+  } = useFormValidation(entitySchemas.note, {
+    title: '',
+    content: '',
+    folderId: null,
+  });
   // Memoizar prompts visibles para evitar recálculos
   const visiblePrompts = useMemo(() => {
     return aiPrompts.filter(prompt => 
@@ -38,28 +52,50 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
   useEffect(() => {
     if (note) {
       // Editar nota existente
-      setTitle(note.title);
-      setContent(note.content);
+      resetForm({
+        title: note.title,
+        content: note.content,
+        folderId: note.folderId,
+      });
       setSelectedFolderId(note.folderId);
     } else {
       // Nueva nota
-      setTitle('');
-      setContent('');
+      resetForm({
+        title: '',
+        content: '',
+        folderId: null,
+      });
       setSelectedFolderId(null);
     }
-  }, [note]);
+  }, [note, resetForm]);
 
   // Función para guardar la nota
   const handleSave = useCallback(() => {
-    if (title.trim() || content.trim()) {
-      onSave(title.trim() || 'Sin título', content, selectedFolderId);
+    const validation = validateForm();
+    if (!validation.valid) {
+      console.log('❌ Note validation failed:', validation.errors);
+      return;
+    }
+
+    const data = validation.data!;
+    if (data.title.trim() || data.content.trim()) {
+      onSave(data.title || 'Sin título', data.content, selectedFolderId);
       onClose();
     }
-  }, [title, content, selectedFolderId, onSave, onClose]);
+  }, [validateForm, selectedFolderId, onSave, onClose]);
 
   // Función para ejecutar prompt de IA seleccionado
   const handleExecutePrompt = useCallback(async (prompt: AIPrompt) => {
-    if (!content.trim()) {
+    const currentContent = fields.content?.value || '';
+    
+    // Validar contenido para IA
+    const aiValidation = customValidators.validateNoteForAI(currentContent);
+    if (!aiValidation.valid) {
+      setAiError(aiValidation.errors[0]);
+      return;
+    }
+
+    if (!currentContent.trim()) {
       setAiError('Escribe algo de contenido primero');
       return;
     }
@@ -80,26 +116,26 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
         // Para prompts por defecto, usar las funciones específicas
         switch (prompt.name) {
           case 'Mejorar escritura':
-            improvedContent = await geminiService.improveNote(content);
+            improvedContent = await geminiService.improveNote(currentContent);
             break;
           case 'Crear resumen':
-            improvedContent = await geminiService.generateSummary(content);
+            improvedContent = await geminiService.generateSummary(currentContent);
             break;
           default:
-            improvedContent = await geminiService.executePrompt(prompt.promptTemplate, content);
+            improvedContent = await geminiService.executePrompt(prompt.promptTemplate, currentContent);
         }
       } else {
         // Para prompts personalizados, usar executePrompt
-        improvedContent = await geminiService.executePrompt(prompt.promptTemplate, content);
+        improvedContent = await geminiService.executePrompt(prompt.promptTemplate, currentContent);
       }
       
-      setContent(improvedContent);
+      setFieldValue('content', improvedContent);
     } catch (error) {
       setAiError(error instanceof Error ? error.message : 'Error mejorando la nota');
     } finally {
       setAiLoading(false);
     }
-  }, [content]);
+  }, [fields.content?.value, setFieldValue]);
 
   // Manejar atajos de teclado (Ctrl+S para guardar)
   const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
@@ -115,13 +151,11 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
       <div className="flex items-center justify-between p-4 border-b border-app">
         <div className="flex items-center gap-4 flex-1">
           {/* Campo de título */}
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
+          <ValidatedInput
+            {...getFieldProps('title')}
             placeholder="Título de la nota..."
-            className="text-lg font-semibold bg-transparent border-none outline-none flex-1 text-app-primary placeholder-app-tertiary"
-            onKeyDown={handleKeyDown}
+            className="text-lg font-semibold bg-transparent border-none outline-none flex-1 text-app-primary placeholder-app-tertiary focus:ring-0 focus:border-none"
+            maxLength={VALIDATION_LIMITS.NOTE_TITLE_MAX}
           />
           {/* Selector de carpeta */}
           <select
@@ -144,7 +178,7 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
               prompts={visiblePrompts}
               onSelectPrompt={handleExecutePrompt}
               loading={aiLoading}
-              disabled={!content.trim()}
+              disabled={!fields.content?.value?.trim()}
             />
           </div>
           {/* Botón de guardar */}
@@ -210,19 +244,19 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
         
         {showPreview ? (
           <div className="h-full overflow-y-auto">
-            {content ? (
-              <MarkdownRenderer content={content} />
+            {fields.content?.value ? (
+              <MarkdownRenderer content={fields.content.value} />
             ) : (
               <p className="text-app-tertiary italic">Escribe contenido para ver la vista previa...</p>
             )}
           </div>
         ) : (
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
+          <ValidatedTextarea
+            {...getFieldProps('content')}
             placeholder="Escribe tu nota aquí...&#10;&#10;Usa **texto** para negritas&#10;Usa *texto* para cursivas&#10;Usa # para títulos&#10;Usa - para listas"
-            className="w-full h-full resize-none border-none outline-none text-app-primary placeholder-app-tertiary leading-relaxed bg-transparent"
-            onKeyDown={handleKeyDown}
+            className="w-full h-full resize-none border-none outline-none text-app-primary placeholder-app-tertiary leading-relaxed bg-transparent focus:ring-0 focus:border-none"
+            showCharCount
+            maxLength={VALIDATION_LIMITS.NOTE_CONTENT_MAX}
           />
         )}
       </div>
@@ -230,7 +264,12 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
       {/* Pie con información de ayuda */}
       <div className="p-4 border-t border-app bg-app-secondary">
         <div className="flex items-center justify-between text-xs text-app-tertiary">
-          <span>Presiona Ctrl+S para guardar rápidamente</span>
+          <div className="flex items-center gap-4">
+            <span>Presiona Ctrl+S para guardar rápidamente</span>
+            {!formState.isValid && formState.hasValues && (
+              <span className="text-red-500">⚠ Revisa los errores del formulario</span>
+            )}
+          </div>
           {geminiService.isConfigured() && (
             <span className="flex items-center gap-1">
               <div className="w-2 h-2 bg-green-500 rounded-full" />

@@ -1,25 +1,50 @@
 import React, { useState } from 'react';
 import { Mail, Lock, User, Eye, EyeOff } from 'lucide-react';
 import { auth } from '../lib/supabase';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { schemas } from '../lib/validation';
+import { ValidatedInput } from './forms/ValidatedInput';
+import { z } from 'zod';
 
 interface AuthFormProps {
   onSuccess: () => void;
 }
 
+const authSchema = z.object({
+  email: schemas.email,
+  password: schemas.password,
+});
 export function AuthForm({ onSuccess }: AuthFormProps) {
   const [isLogin, setIsLogin] = useState(true);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const {
+    fields,
+    formState,
+    getFieldProps,
+    validateForm,
+    resetForm,
+  } = useFormValidation(authSchema, {
+    email: '',
+    password: '',
+  });
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    const validation = validateForm();
+    if (!validation.valid) {
+      setError('Por favor corrige los errores en el formulario');
+      return;
+    }
+
     setLoading(true);
     setError('');
 
     try {
+      const { email, password } = validation.data!;
+      
       if (isLogin) {
         const { error } = await auth.signIn(email, password);
         if (error) throw error;
@@ -46,6 +71,11 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
     }
   };
 
+  // Resetear formulario cuando cambia el modo
+  React.useEffect(() => {
+    resetForm({ email: '', password: '' });
+    setError('');
+  }, [isLogin, resetForm]);
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4 transition-colors duration-300">
       <div className="bg-app rounded-2xl shadow-app-xl w-full max-w-md p-8">
@@ -68,51 +98,41 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
             </div>
           )}
 
-          <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Correo electrónico
-            </label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-app-tertiary" />
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="tu@email.com"
-                className="w-full pl-10 pr-4 py-3 border border-app rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
-                required
-              />
-            </div>
-          </div>
+          <ValidatedInput
+            {...getFieldProps('email')}
+            type="email"
+            label="Correo electrónico"
+            placeholder="tu@email.com"
+            leftIcon={<Mail className="w-5 h-5" />}
+            required
+            showValidIcon
+            className="py-3"
+          />
 
-          <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Contraseña
-            </label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-app-tertiary" />
-              <input
-                type={showPassword ? 'text' : 'password'}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                className="w-full pl-10 pr-12 py-3 border border-app rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
-                required
-                minLength={6}
-              />
+          <ValidatedInput
+            {...getFieldProps('password')}
+            type={showPassword ? 'text' : 'password'}
+            label="Contraseña"
+            placeholder="••••••••"
+            leftIcon={<Lock className="w-5 h-5" />}
+            rightIcon={
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-app-tertiary hover:text-app-secondary"
+                className="text-app-tertiary hover:text-app-secondary"
               >
                 {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
               </button>
-            </div>
-          </div>
+            }
+            required
+            showValidIcon
+            className="py-3"
+            helperText="Mínimo 6 caracteres, debe contener al menos una letra"
+          />
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || !formState.isValid}
             className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-blue-300 text-white py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
           >
             {loading ? (

@@ -4,6 +4,7 @@ import { useSupabaseClient } from './useSupabaseClient';
 import { Note } from '../types';
 import { User } from '@supabase/supabase-js';
 import { CACHE_CONFIG } from '../config/constants';
+import { validateAndSanitize, entitySchemas, extractAndValidateHashtags } from '../lib/validation';
 
 /**
  * Hook especializado para gestión de notas con cache optimizado
@@ -48,10 +49,20 @@ export function useNotes(user: User | null) {
     mutationFn: async ({ title, content, folderId }: { title: string; content: string; folderId: string | null }) => {
       if (!user) throw new Error('User not authenticated');
 
-      const data = await operations.notes.insert({
+      // Validar y sanitizar datos antes de enviar
+      const validatedData = validateAndSanitize(entitySchemas.note, {
         title,
         content,
-        folder_id: folderId,
+        folderId,
+      });
+
+      // Extraer hashtags del contenido
+      const tags = extractAndValidateHashtags(validatedData.content);
+      const data = await operations.notes.insert({
+        title: validatedData.title,
+        content: validatedData.content,
+        folder_id: validatedData.folderId,
+        tags,
         user_id: user.id,
       });
 
@@ -59,10 +70,10 @@ export function useNotes(user: User | null) {
 
       const newNote: Note = {
         id: data.id,
-        title: data.title,
-        content: data.content || '',
+        title: validatedData.title,
+        content: validatedData.content,
         folderId: data.folder_id,
-        tags: data.tags || [],
+        tags,
         createdAt: new Date(data.created_at),
         updatedAt: new Date(data.updated_at),
       };
@@ -109,9 +120,16 @@ export function useNotes(user: User | null) {
     mutationFn: async ({ id, updates }: { id: string; updates: Partial<Note> }) => {
       if (!user) throw new Error('User not authenticated');
 
+      // Validar y sanitizar actualizaciones
+      const validatedUpdates = validateAndSanitize(entitySchemas.note.partial(), updates);
+
+      // Extraer hashtags si se actualiza el contenido
+      if (validatedUpdates.content !== undefined) {
+        validatedUpdates.tags = extractAndValidateHashtags(validatedUpdates.content);
+      }
       const supabaseUpdates: any = { ...updates };
-      if ('folderId' in updates) {
-        supabaseUpdates.folder_id = updates.folderId;
+      if ('folderId' in validatedUpdates) {
+        supabaseUpdates.folder_id = validatedUpdates.folderId;
         delete supabaseUpdates.folderId;
       }
       delete supabaseUpdates.createdAt;
@@ -123,7 +141,7 @@ export function useNotes(user: User | null) {
         updated_at: new Date().toISOString(),
       });
 
-      return { id, updates };
+      return { id, updates: validatedUpdates };
     },
     onMutate: async ({ id, updates }) => {
       // Optimistic update

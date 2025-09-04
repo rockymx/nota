@@ -1,5 +1,8 @@
 import React, { useState } from 'react';
 import { X, Folder } from 'lucide-react';
+import { useFormValidation } from '../hooks/useFormValidation';
+import { entitySchemas } from '../lib/validation';
+import { ValidatedInput } from './forms/ValidatedInput';
 
 interface CreateFolderModalProps {
   onClose: () => void;
@@ -18,20 +21,46 @@ const FOLDER_COLORS = [
 ];
 
 export function CreateFolderModal({ onClose, onCreateFolder }: CreateFolderModalProps) {
-  const [name, setName] = useState('');
+  const {
+    fields,
+    formState,
+    getFieldProps,
+    validateForm,
+    setFieldValue,
+  } = useFormValidation(entitySchemas.folder, {
+    name: '',
+    color: FOLDER_COLORS[0],
+  });
+
   const [selectedColor, setSelectedColor] = useState(FOLDER_COLORS[0]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Form submit:', { name: name.trim(), color: selectedColor });
     
-    if (name.trim()) {
-      console.log('📝 Calling onCreateFolder with:', { name: name.trim(), color: selectedColor });
-      onCreateFolder(name.trim(), selectedColor);
+    const validation = validateForm();
+    if (!validation.valid) {
+      console.log('❌ Form validation failed:', validation.errors);
+      return;
+    }
+
+    console.log('✅ Form validation passed:', validation.data);
+    setIsSubmitting(true);
+    
+    try {
+      onCreateFolder(validation.data!.name, selectedColor);
       onClose();
+    } catch (error) {
+      console.error('Error creating folder:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
+  // Actualizar color en el estado de validación
+  React.useEffect(() => {
+    setFieldValue('color', selectedColor);
+  }, [selectedColor, setFieldValue]);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-app rounded-xl shadow-app-xl w-full max-w-md">
@@ -47,16 +76,14 @@ export function CreateFolderModal({ onClose, onCreateFolder }: CreateFolderModal
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
-            <label className="block text-sm font-medium text-app-primary mb-2">
-              Nombre de la carpeta
-            </label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+            <ValidatedInput
+              {...getFieldProps('name')}
+              label="Nombre de la carpeta"
               placeholder="Ej: Trabajo, Personal, Ideas..."
-              className="w-full px-3 py-2 border border-app rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-colors bg-app text-app-primary placeholder-app-tertiary"
+              required
               autoFocus
+              showValidIcon
+              helperText="Entre 1 y 50 caracteres, solo letras, números y símbolos básicos"
             />
           </div>
 
@@ -93,10 +120,17 @@ export function CreateFolderModal({ onClose, onCreateFolder }: CreateFolderModal
             </button>
             <button
               type="submit"
-              disabled={!name.trim()}
-              className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={!formState.isValid || isSubmitting}
+              className="flex-1 btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Crear Carpeta
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                'Crear Carpeta'
+              )}
             </button>
           </div>
         </form>

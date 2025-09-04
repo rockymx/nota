@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useSupabaseClient } from './useSupabaseClient';
 import { AIPrompt } from '../types';
 import { User } from '@supabase/supabase-js';
+import { validateAndSanitize, entitySchemas, customValidators } from '../lib/validation';
 
 /**
  * Hook personalizado para manejar prompts de IA con Supabase
@@ -69,11 +70,24 @@ export function useAIPrompts(user: User | null) {
   ) => {
     if (!user) return null;
 
-    const data = await operations.aiPrompts.insert({
+    // Validar datos antes de enviar
+    const validatedData = validateAndSanitize(entitySchemas.aiPrompt, {
       name,
       description,
-      prompt_template: promptTemplate,
+      promptTemplate,
       category,
+    });
+
+    // Validación adicional para estructura del prompt
+    const structureValidation = customValidators.validatePromptStructure(validatedData.promptTemplate);
+    if (!structureValidation.valid) {
+      throw new Error(structureValidation.errors[0]);
+    }
+    const data = await operations.aiPrompts.insert({
+      name: validatedData.name,
+      description: validatedData.description,
+      prompt_template: validatedData.promptTemplate,
+      category: validatedData.category,
       is_default: false,
       user_id: user.id,
     });
@@ -82,10 +96,10 @@ export function useAIPrompts(user: User | null) {
 
     const newPrompt: AIPrompt = {
       id: data.id,
-      name: data.name,
-      description: data.description,
-      promptTemplate: data.prompt_template,
-      category: data.category,
+      name: validatedData.name,
+      description: validatedData.description,
+      promptTemplate: validatedData.promptTemplate,
+      category: validatedData.category,
       isDefault: data.is_default,
       userId: data.user_id,
       createdAt: new Date(data.created_at),
@@ -105,18 +119,28 @@ export function useAIPrompts(user: User | null) {
   ) => {
     if (!user) return;
 
+    // Validar actualizaciones
+    const validatedUpdates = validateAndSanitize(entitySchemas.aiPrompt.partial(), updates);
+
+    // Validar estructura del prompt si se actualiza
+    if (validatedUpdates.promptTemplate) {
+      const structureValidation = customValidators.validatePromptStructure(validatedUpdates.promptTemplate);
+      if (!structureValidation.valid) {
+        throw new Error(structureValidation.errors[0]);
+      }
+    }
     const supabaseUpdates: any = {};
-    if (updates.name) supabaseUpdates.name = updates.name;
-    if (updates.description) supabaseUpdates.description = updates.description;
-    if (updates.promptTemplate) supabaseUpdates.prompt_template = updates.promptTemplate;
-    if (updates.category) supabaseUpdates.category = updates.category;
+    if (validatedUpdates.name) supabaseUpdates.name = validatedUpdates.name;
+    if (validatedUpdates.description) supabaseUpdates.description = validatedUpdates.description;
+    if (validatedUpdates.promptTemplate) supabaseUpdates.prompt_template = validatedUpdates.promptTemplate;
+    if (validatedUpdates.category) supabaseUpdates.category = validatedUpdates.category;
     supabaseUpdates.updated_at = new Date().toISOString();
 
     await operations.aiPrompts.update(id, user.id, supabaseUpdates);
 
     setPrompts(prev => prev.map(prompt =>
       prompt.id === id
-        ? { ...prompt, ...updates, updatedAt: new Date() }
+        ? { ...prompt, ...validatedUpdates, updatedAt: new Date() }
         : prompt
     ));
   };
