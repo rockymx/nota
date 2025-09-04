@@ -1,7 +1,7 @@
 import React, { useState, memo, useMemo, useCallback } from 'react';
 import { Folder, Trash2, Hash } from 'lucide-react';
 import { Folder as FolderType } from '../types';
-import { DeleteFolderModal } from './DeleteFolderModal';
+import { useToast } from '../hooks/useToast';
 
 interface FolderListProps {
   folders: FolderType[];
@@ -18,18 +18,29 @@ const FolderList = memo(function FolderList({
   onFolderSelect,
   onDeleteFolder,
 }: FolderListProps) {
-  const [folderToDelete, setFolderToDelete] = useState<FolderType | null>(null);
+  const { warning } = useToast();
 
   const handleDeleteClick = useCallback((folder: FolderType) => {
-    setFolderToDelete(folder);
-  }, []);
+    const notesCount = getNotesCountInFolder(folder.id);
+    const message = notesCount > 0 
+      ? `${notesCount} nota${notesCount > 1 ? 's' : ''} se moverá${notesCount > 1 ? 'n' : ''} a "Sin carpeta"`
+      : undefined;
 
-  const handleConfirmDelete = useCallback(() => {
-    if (folderToDelete) {
-      onDeleteFolder(folderToDelete.id);
-      setFolderToDelete(null);
-    }
-  }, [folderToDelete, onDeleteFolder]);
+    warning(
+      `Carpeta "${folder.name}" eliminada`,
+      message,
+      {
+        label: 'Deshacer',
+        onClick: () => {
+          // TODO: Implementar lógica de deshacer
+          console.log('Deshacer eliminación de carpeta:', folder.id);
+        }
+      }
+    );
+    
+    // Eliminar inmediatamente
+    onDeleteFolder(folder.id);
+  }, [warning, onDeleteFolder, getNotesCountInFolder]);
 
   // Memoizar el conteo de notas por carpeta
   const notesCountByFolder = useMemo(() => {
@@ -91,6 +102,7 @@ const FolderList = memo(function FolderList({
           <button
             onClick={() => handleDeleteClick(folder)}
             className="p-1 rounded hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors group"
+            title="Eliminar carpeta"
           >
             <Trash2 className="w-4 h-4 text-app-tertiary group-hover:text-red-500" />
           </button>
@@ -105,15 +117,6 @@ const FolderList = memo(function FolderList({
       )}
       </div>
 
-      {/* Modal de confirmación para eliminar carpeta */}
-      {folderToDelete && (
-        <DeleteFolderModal
-          folder={folderToDelete}
-          notesCount={getNotesCountInFolder(folderToDelete.id)}
-          onClose={() => setFolderToDelete(null)}
-          onConfirm={handleConfirmDelete}
-        />
-      )}
     </>
   );
 });

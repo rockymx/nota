@@ -12,6 +12,8 @@ import { useNotes } from './hooks/useNotes';
 import { useFolders } from './hooks/useFolders';
 import { useNotesFilter } from './hooks/useNotesFilter';
 import { useAIPrompts } from './hooks/useAIPrompts';
+import { useToast } from './hooks/useToast';
+import { ToastContainer } from './components/ToastContainer';
 import { geminiService } from './services/geminiService';
 import { Note } from './types';
 import { cacheUtils } from './lib/queryClient';
@@ -43,6 +45,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
   const [viewingNote, setViewingNote] = useState<Note | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [showAdminSetup, setShowAdminSetup] = useState(false);
+  const { toasts, removeToast } = useToast();
   console.log('🎛️ App state initialized');
   
   // Hooks especializados separados
@@ -287,6 +290,12 @@ function App({ onGoToAdmin }: AppProps = {}) {
           onEdit={handleEditNote}
         />
       )}
+
+      {/* Sistema de toasts */}
+      <ToastContainer
+        toasts={toasts}
+        onDismiss={removeToast}
+      />
     </div>
   );
 }

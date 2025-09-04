@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { Folder } from '../types';
@@ -182,12 +182,6 @@ export function useFolders(user: User | null) {
   }, [refetchFolders]);
 
   // Invalidar cache cuando el usuario cambia
-  useEffect(() => {
-    if (!user) {
-      queryClient.removeQueries({ queryKey: ['folders'] });
-    }
-  }, [user, queryClient]);
-
   return {
     folders,
     loading,
