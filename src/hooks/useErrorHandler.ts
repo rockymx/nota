@@ -198,7 +198,7 @@ export function useErrorHandler() {
     options: ErrorHandlerOptions & { operationName?: string } = {}
   ): Promise<T | null> => {
     const {
-      retryConfig,
+      retryConfig = {},
       operationName = 'operation',
       context = {},
     } = options;
@@ -207,8 +207,10 @@ export function useErrorHandler() {
       maxRetries: RETRY_CONFIG.MAX_RETRIES,
       initialDelay: RETRY_CONFIG.INITIAL_DELAY,
       maxDelay: RETRY_CONFIG.MAX_DELAY,
-      backoffFactor: RETRY_CONFIG.BACKOFF_FACTOR,
-      ...retryConfig,
+      maxRetries: retryConfig.maxRetries ?? RETRY_CONFIG.MAX_RETRIES,
+      initialDelay: retryConfig.initialDelay ?? RETRY_CONFIG.INITIAL_DELAY,
+      maxDelay: retryConfig.maxDelay ?? RETRY_CONFIG.MAX_DELAY,
+      backoffFactor: retryConfig.backoffFactor ?? RETRY_CONFIG.BACKOFF_FACTOR,
     };
 
     let lastError: Error;
