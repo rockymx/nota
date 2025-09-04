@@ -1,6 +1,6 @@
 import React, { Component, ReactNode } from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
-import { ErrorBoundaryState, AppError } from '../types/errors';
+import { ErrorBoundaryState, AppError, ErrorType } from '../types/errors';
 import { ERROR_TYPES } from '../config/constants';
 
 interface ErrorBoundaryProps {
