@@ -28,10 +28,6 @@ export function useNotes(user: User | null) {
       if (!data) return [];
 
       const loadedNotes: Note[] = data.map((note: any) => ({
-      }
-      )
-      )
-      const loadedNotes: Note[] = (data as any[]).map((note: any) => ({
         id: note.id,
         title: note.title,
         content: note.content || '',
