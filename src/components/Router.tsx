@@ -1,58 +1,16 @@
 import { useState, useEffect } from 'react';
-import { User } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 import { AuthForm } from './AuthForm';
 import { AdminPage } from './admin/AdminPage';
 import App from '../App';
+import { useAuth } from '../hooks/useAuth';
 
 export function Router() {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading } = useAuth();
   const [currentPath, setCurrentPath] = useState(window.location.pathname);
 
   useEffect(() => {
-    console.log('🔐 Router: Auth effect triggered');
-    
-    // Log current path for debugging
     console.log('🌐 Current path:', window.location.pathname);
-    console.log('🌐 Current search:', window.location.search);
-    console.log('🌐 Current hash:', window.location.hash);
-    
-    // Obtener usuario actual
-    const getUser = async () => {
-      try {
-        console.log('👤 Getting current user...');
-        const { data: { user } } = await supabase.auth.getUser();
-        console.log('👤 User result:', user ? `${user.email} (${user.id})` : 'none');
-        setUser(user);
-      } catch (error) {
-        console.error('Error getting user:', error);
-        setUser(null);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getUser();
-
-    // Escuchar cambios en la autenticación
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        console.log('🔐 Auth state change:', event, session?.user?.email || 'none');
-
-        // Update user state
-        setUser(session?.user ?? null);
-
-        // Set loading to false after auth state updates
-        setLoading(false);
-
-        // If user just signed in, navigate to home
-        if (event === 'SIGNED_IN' && session?.user) {
-          console.log('✅ User signed in, navigating to home');
-          navigateTo('/');
-        }
-      }
-    );
 
     // Escuchar cambios en la URL
     const handlePopState = () => {
@@ -64,7 +22,6 @@ export function Router() {
     window.addEventListener('popstate', handlePopState);
 
     return () => {
-      subscription.unsubscribe();
       window.removeEventListener('popstate', handlePopState);
     };
   }, []);

@@ -15,57 +15,23 @@ export function useAuth() {
 
   useEffect(() => {
     console.log('🔐 useAuth: Initializing authentication...');
-    
-    const initializeAuth = async () => {
-      const result = await withAuthErrorHandling(async () => {
-        console.log('👤 Getting current user...');
-        
-        // Clear any invalid session first
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session && session.expires_at && new Date(session.expires_at * 1000) < new Date()) {
-          console.log('🔓 Session expired, clearing...');
-          await supabase.auth.signOut();
-          return null;
-        }
-        
-        // Get current user with timeout
-        const getUserPromise = supabase.auth.getUser();
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Auth timeout')), TIMEOUTS.AUTH)
-        );
-        
-        const { data: { user }, error: authError } = await Promise.race([
-          getUserPromise, 
-          timeoutPromise
-        ]) as any;
 
-        if (authError) throw authError;
-
-        console.log('👤 Auth result:', {
-          hasUser: !!user,
-          email: user?.email || 'none',
-          id: user?.id || 'none'
-        });
-        
-        return user;
-      }, 'initialize_auth');
-
-      setUser(result);
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('👤 Initial session:', session?.user?.email || 'none');
+      setUser(session?.user ?? null);
       setLoading(false);
-    };
-
-    initializeAuth();
+    });
 
     // Listen to auth state changes
-    console.log('👂 Setting up auth state change listener...');
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
+      (event, session) => {
         console.log('🔐 Auth state change:', {
           event,
           hasSession: !!session,
           userEmail: session?.user?.email || 'none'
         });
-        
+
         setUser(session?.user ?? null);
         setLoading(false);
       }
@@ -82,33 +48,49 @@ export function useAuth() {
     if (user) {
       const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
       if (adminEmails.includes(user.email || '')) {
-        setupAdminUser(user.id);
+        setupAdminUser(user.id, user.email || '');
       }
     }
   }, [user]);
 
-  const setupAdminUser = async (userId: string) => {
+  const setupAdminUser = async (userId: string, userEmail: string) => {
     try {
-      console.log('🔐 Setting up admin user:', userId);
-      
+      console.log('🔐 Setting up admin user:', userEmail);
+
+      // First check if already exists
+      const { data: existing } = await supabase
+        .from('admin_users')
+        .select('id')
+        .eq('user_id', userId)
+        .maybeSingle();
+
+      if (existing) {
+        console.log('✅ Admin user already exists');
+        return;
+      }
+
+      // Try to insert
       const { error } = await (supabase as any)
         .from('admin_users')
-        .upsert({
+        .insert({
           user_id: userId,
           created_by: userId,
           is_active: true
-        }, { 
-          onConflict: 'user_id',
-          ignoreDuplicates: true 
         });
 
-      if (error && !error.message.includes('duplicate')) {
-        console.error('Error setting up admin user:', error);
+      if (error) {
+        // If it's a duplicate key error, that's fine
+        if (error.code === '23505') {
+          console.log('✅ Admin user already exists (duplicate)');
+        } else {
+          console.warn('⚠️ Could not setup admin user (non-critical):', error.message);
+        }
       } else {
         console.log('✅ Admin user setup completed');
       }
     } catch (error) {
-      console.error('❌ Error in setupAdminUser:', error);
+      // Don't block the auth flow if admin setup fails
+      console.warn('⚠️ Admin setup error (non-critical):', error);
     }
   };
 
