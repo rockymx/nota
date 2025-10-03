@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Menu, Plus } from 'lucide-react';
+import { User } from '@supabase/supabase-js';
 import { ErrorBoundary } from './components/ErrorBoundary';
 // Componentes principales de la aplicación
 import { Sidebar } from './components/Sidebar';
@@ -8,7 +9,6 @@ import { NoteEditor } from './components/NoteEditor';
 import { NoteModal } from './components/NoteModal';
 import { SettingsPage } from './components/SettingsPage';
 // Hooks especializados optimizados
-import { useAuth } from './hooks/useAuth';
 import { useNotes } from './hooks/useNotes';
 import { useFolders } from './hooks/useFolders';
 import { useNotesFilter } from './hooks/useNotesFilter';
@@ -29,17 +29,18 @@ console.log('🔍 Environment check in App:', {
 });
 
 interface AppProps {
+  user?: User;
   onGoToAdmin?: () => void;
 }
 
-function App({ onGoToAdmin }: AppProps = {}) {
+function App({ user, onGoToAdmin }: AppProps) {
   console.log('🔧 App component function executing...');
   console.log('🔍 Runtime environment check:', {
     userAgent: navigator.userAgent,
     location: window.location.href,
     origin: window.location.origin
   });
-  
+
   // Estados para controlar la interfaz
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [editingNote, setEditingNote] = useState<Note | null>(null);
@@ -50,11 +51,12 @@ function App({ onGoToAdmin }: AppProps = {}) {
   const { toasts, removeToast } = useToast();
   const errorHandler = useErrorHandler();
   console.log('🎛️ App state initialized');
-  
+
   // Hooks especializados separados
-  const { user, loading: authLoading, isAuthenticated } = useAuth();
-  const { notes, loading: notesLoading, createNote, updateNote, deleteNote } = useNotes(user);
-  const { folders, loading: foldersLoading, createFolder, deleteFolder, restoreFolder } = useFolders(user);
+  const isAuthenticated = !!user;
+  const authLoading = false;
+  const { notes, loading: notesLoading, createNote, updateNote, deleteNote } = useNotes(user || null);
+  const { folders, loading: foldersLoading, createFolder, deleteFolder, restoreFolder } = useFolders(user || null);
   const {
     filteredNotes,
     selectedFolderId,
@@ -111,7 +113,7 @@ function App({ onGoToAdmin }: AppProps = {}) {
     deletePrompt,
     hideDefaultPrompt,
     showDefaultPrompt,
-  } = useAIPrompts(user);
+  } = useAIPrompts(user || null);
 
   console.log('🧠 AI Prompts state:', {
     promptsCount: aiPrompts.length,

@@ -75,5 +75,5 @@ export function Router() {
   }
 
   console.log('🏠 Rendering main App');
-  return <App />;
+  return <App user={user} />;
 }

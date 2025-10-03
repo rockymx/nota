@@ -44,14 +44,15 @@ export function useAuth() {
   }, []);
 
   // Setup admin user automatically for specific emails
-  useEffect(() => {
-    if (user) {
-      const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
-      if (adminEmails.includes(user.email || '')) {
-        setupAdminUser(user.id, user.email || '');
-      }
-    }
-  }, [user]);
+  // Temporarily disabled to prevent blocking auth flow
+  // useEffect(() => {
+  //   if (user) {
+  //     const adminEmails = ['2dcommx02@gmail.com', '2dcommx01@gmail.com'];
+  //     if (adminEmails.includes(user.email || '')) {
+  //       setupAdminUser(user.id, user.email || '');
+  //     }
+  //   }
+  // }, [user]);
 
   const setupAdminUser = async (userId: string, userEmail: string) => {
     try {
