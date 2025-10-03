@@ -27,7 +27,7 @@ export function useNotes(user: User | null) {
       const data = await operations.notes.select(user.id);
       if (!data) return [];
 
-      const loadedNotes: Note[] = data.map((note: any) => ({
+      const loadedNotes: Note[] = (data as any[]).map((note: any) => ({
         id: note.id,
         title: note.title,
         content: note.content || '',
