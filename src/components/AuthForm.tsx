@@ -44,15 +44,17 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
 
     try {
       const { email, password } = validation.data!;
-      
+
       if (isLogin) {
         const { error } = await auth.signIn(email, password);
         if (error) throw error;
+        console.log('✅ Login successful, waiting for auth state change...');
       } else {
         const { error } = await auth.signUp(email, password);
         if (error) throw error;
+        console.log('✅ Signup successful, waiting for auth state change...');
       }
-      onSuccess();
+      // Don't call onSuccess() here - let onAuthStateChange handle navigation
     } catch (error: any) {
       // Handle rate limit errors specifically
       if (error.message && error.message.includes('over_email_send_rate_limit')) {

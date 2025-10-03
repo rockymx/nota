@@ -39,8 +39,18 @@ export function Router() {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         console.log('🔐 Auth state change:', event, session?.user?.email || 'none');
+
+        // Update user state
         setUser(session?.user ?? null);
+
+        // Set loading to false after auth state updates
         setLoading(false);
+
+        // If user just signed in, navigate to home
+        if (event === 'SIGNED_IN' && session?.user) {
+          console.log('✅ User signed in, navigating to home');
+          navigateTo('/');
+        }
       }
     );
 
