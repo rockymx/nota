@@ -70,22 +70,25 @@ class GeminiService {
 
     // Validar formato de API key de Gemini
     const trimmedKey = apiKey.trim();
-    if (!trimmedKey.startsWith('AIza')) {
-      throw new Error('API key de Gemini inválida. Debe comenzar con "AIza"');
-    }
-    if (trimmedKey.length < 35) {
-      throw new Error('API key de Gemini inválida. Longitud incorrecta.');
+
+    // Validación básica: debe tener longitud mínima
+    if (trimmedKey.length < 20) {
+      throw new Error('API key de Gemini inválida. Demasiado corta.');
     }
 
+    // Log para debugging
+    console.log('🔑 Setting API key - Length:', trimmedKey.length);
+    console.log('🔑 API key prefix:', trimmedKey.substring(0, 4));
+
     this.apiKey = trimmedKey;
-    
+
     if (this.errorHandler) {
       return await this.errorHandler.withDatabaseErrorHandling(
-        () => this.saveApiKeyToSupabase(apiKey),
+        () => this.saveApiKeyToSupabase(trimmedKey),
         'save_gemini_api_key'
       ) !== null;
     } else {
-      await this.saveApiKeyToSupabase(apiKey);
+      await this.saveApiKeyToSupabase(trimmedKey);
       return true;
     }
   }
