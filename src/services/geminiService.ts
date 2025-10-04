@@ -4,7 +4,7 @@ import { TIMEOUTS, ERROR_MESSAGES } from '../config/constants';
 class GeminiService {
   private apiKey: string | null = null;
   private userId: string | null = null;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent';
   private errorHandler: any = null;
 
   constructor() {
@@ -281,11 +281,13 @@ class GeminiService {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('❌ Gemini API error:', response.status, errorText);
-      
+
       if (response.status === 400) {
         throw new Error(ERROR_MESSAGES.AI_INVALID_KEY);
       } else if (response.status === 403) {
         throw new Error(ERROR_MESSAGES.AI_INVALID_KEY);
+      } else if (response.status === 404) {
+        throw new Error('Modelo de IA no disponible. Verifica tu API key.');
       } else if (response.status === 429) {
         throw new Error(ERROR_MESSAGES.AI_QUOTA_EXCEEDED);
       } else {
