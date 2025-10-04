@@ -82,33 +82,26 @@ class GeminiService {
 
   private async saveApiKeyToSupabase(apiKey: string) {
     console.log('💾 Saving Gemini API key to Supabase...');
-    
-    // Intentar actualizar primero
-    const { error: updateError } = await (supabase as any)
+    console.log('User ID:', this.userId);
+
+    // Use upsert to handle both insert and update
+    const { data, error } = await (supabase as any)
       .from('user_settings')
-      .update([{ 
+      .upsert({
+        user_id: this.userId,
         gemini_api_key: apiKey,
         updated_at: new Date().toISOString()
-      }])
-      .eq('user_id', this.userId);
+      }, {
+        onConflict: 'user_id'
+      })
+      .select();
 
-    if (updateError) {
-      if (updateError.code === 'PGRST116') {
-        // No existe registro, crear uno nuevo
-        const { error: insertError } = await (supabase as any)
-          .from('user_settings')
-          .insert([{
-            user_id: this.userId,
-            gemini_api_key: apiKey,
-          }]);
-
-        if (insertError) throw insertError;
-      } else {
-        throw updateError;
-      }
+    if (error) {
+      console.error('❌ Error saving Gemini API key:', error);
+      throw error;
     }
 
-    console.log('✅ Gemini API key saved securely to Supabase');
+    console.log('✅ Gemini API key saved securely to Supabase', data);
   }
 
   getApiKey(): string | null {
@@ -141,17 +134,17 @@ class GeminiService {
 
   private async clearApiKeyFromSupabase() {
     console.log('🗑️ Removing Gemini API key from Supabase...');
-    
+
     const { error } = await (supabase as any)
       .from('user_settings')
-      .update([{ 
+      .update({
         gemini_api_key: null,
         updated_at: new Date().toISOString()
-      }])
+      })
       .eq('user_id', this.userId);
 
     if (error) throw error;
-    
+
     console.log('✅ Gemini API key removed securely from Supabase');
   }
 
