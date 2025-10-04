@@ -15,30 +15,44 @@ export function useAuth() {
 
   useEffect(() => {
     console.log('🔐 useAuth: Initializing authentication...');
+    let mounted = true;
 
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!mounted) return;
       console.log('👤 Initial session:', session?.user?.email || 'none');
       setUser(session?.user ?? null);
       setLoading(false);
+    }).catch(err => {
+      if (!mounted) return;
+      console.error('❌ Error getting session:', err);
+      setUser(null);
+      setLoading(false);
     });
 
-    // Listen to auth state changes
+    // Listen to auth state changes - using async block to avoid deadlock
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
+        if (!mounted) return;
+
         console.log('🔐 Auth state change:', {
           event,
           hasSession: !!session,
           userEmail: session?.user?.email || 'none'
         });
 
-        setUser(session?.user ?? null);
-        setLoading(false);
+        // Use async block inside callback to avoid deadlock
+        (async () => {
+          if (!mounted) return;
+          setUser(session?.user ?? null);
+          setLoading(false);
+        })();
       }
     );
 
     return () => {
       console.log('🧹 Cleaning up auth listener...');
+      mounted = false;
       subscription.unsubscribe();
     };
   }, []);
