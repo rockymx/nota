@@ -63,20 +63,34 @@ export function AIConfigModal({ onClose, userId }: AIConfigModalProps) {
     setTestResult(null);
 
     try {
+      console.log('🧪 INICIANDO PRUEBA DE API KEY...');
+      console.log('🔑 API Key length:', apiKey.trim().length);
+      console.log('🔑 API Key starts with:', apiKey.trim().substring(0, 8));
+
       // Guardar temporalmente la API key para probar
       await geminiService.setUser(userId);
+      console.log('✅ User set in geminiService');
+
       await geminiService.setApiKey(apiKey.trim());
-      
+      console.log('✅ API key set in geminiService');
+
       // Probar con un texto simple
-      await geminiService.improveNote('Esta es una prueba de la API de Gemini.');
+      console.log('🤖 Calling improveNote...');
+      const result = await geminiService.improveNote('Esta es una prueba de la API de Gemini.');
+      console.log('✅ API call successful! Result:', result);
+
       setTestResult('✅ API key válida y funcionando');
       setIsConfigured(true);
-      
+
     } catch (error) {
-      setTestResult(`❌ Error: ${error instanceof Error ? error.message : 'API key inválida'}`);
+      console.error('❌ TEST FAILED:', error);
+      const errorMessage = error instanceof Error ? error.message : 'API key inválida';
+      console.error('❌ Error message:', errorMessage);
+      setTestResult(`❌ Error: ${errorMessage}`);
       setIsConfigured(false);
     } finally {
       setTestLoading(false);
+      console.log('🏁 Test completed');
     }
   };
 
@@ -103,7 +117,7 @@ export function AIConfigModal({ onClose, userId }: AIConfigModalProps) {
               Configura tu API key de Google Gemini para usar funciones de IA como mejorar notas y generar resúmenes.
             </p>
             <a
-              href="https://makersuite.google.com/app/apikey"
+              href="https://aistudio.google.com/app/apikey"
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 font-medium"
