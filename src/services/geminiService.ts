@@ -4,7 +4,7 @@ import { TIMEOUTS, ERROR_MESSAGES } from '../config/constants';
 class GeminiService {
   private apiKey: string | null = null;
   private userId: string | null = null;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
   private errorHandler: any = null;
 
   constructor() {
