@@ -46,13 +46,19 @@ export function AuthForm({ onSuccess }: AuthFormProps) {
       const { email, password } = validation.data!;
 
       if (isLogin) {
-        const { error } = await auth.signIn(email, password);
+        console.log('🔐 Attempting login...', email);
+        const { data, error } = await auth.signIn(email, password);
+        console.log('🔐 Login response:', { hasData: !!data, error: error?.message });
         if (error) throw error;
-        console.log('✅ Login successful, waiting for auth state change...');
+        console.log('✅ Login successful! Session:', data?.session?.user?.email);
+        console.log('⏱️ Waiting for auth state change...');
       } else {
-        const { error } = await auth.signUp(email, password);
+        console.log('📝 Attempting signup...', email);
+        const { data, error } = await auth.signUp(email, password);
+        console.log('📝 Signup response:', { hasData: !!data, error: error?.message });
         if (error) throw error;
-        console.log('✅ Signup successful, waiting for auth state change...');
+        console.log('✅ Signup successful! Session:', data?.session?.user?.email);
+        console.log('⏱️ Waiting for auth state change...');
       }
       // Don't call onSuccess() here - let onAuthStateChange handle navigation
     } catch (error: any) {

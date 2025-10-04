@@ -48,9 +48,19 @@ export function Router() {
   }
 
   if (!user) {
-    console.log('🔓 No user, showing auth form');
+    console.log('🔓 No user detected, showing auth form', {
+      loading,
+      hasUser: !!user,
+      pathname: window.location.pathname
+    });
     return <AuthForm onSuccess={goHome} />;
   }
+
+  console.log('✅ User authenticated!', {
+    email: user.email,
+    userId: user.id,
+    pathname: window.location.pathname
+  });
 
   console.log('🎯 Routing decision:', {
     currentPath,
