@@ -4,7 +4,8 @@ import { TIMEOUTS, ERROR_MESSAGES } from '../config/constants';
 class GeminiService {
   private apiKey: string | null = null;
   private userId: string | null = null;
-  private baseUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent';
+  private modelName = 'gemini-1.5-flash-latest';
+  private baseUrl = 'https://generativelanguage.googleapis.com/v1/models';
   private errorHandler: any = null;
 
   constructor() {
@@ -67,7 +68,16 @@ class GeminiService {
       throw new Error('No user logged in');
     }
 
-    this.apiKey = apiKey;
+    // Validar formato de API key de Gemini
+    const trimmedKey = apiKey.trim();
+    if (!trimmedKey.startsWith('AIza')) {
+      throw new Error('API key de Gemini inválida. Debe comenzar con "AIza"');
+    }
+    if (trimmedKey.length < 35) {
+      throw new Error('API key de Gemini inválida. Longitud incorrecta.');
+    }
+
+    this.apiKey = trimmedKey;
     
     if (this.errorHandler) {
       return await this.errorHandler.withDatabaseErrorHandling(
@@ -258,12 +268,18 @@ class GeminiService {
    */
   private async callGeminiAPI(prompt: string, operation: string): Promise<string> {
     console.log(`🤖 ${operation} with Gemini...`);
-    
-    const timeoutPromise = new Promise((_, reject) => 
+    console.log(`🔗 Using model: ${this.modelName}`);
+    console.log(`🔑 API Key present: ${this.apiKey ? 'Yes' : 'No'}`);
+    console.log(`🔑 API Key starts with: ${this.apiKey?.substring(0, 8)}...`);
+
+    const timeoutPromise = new Promise((_, reject) =>
       setTimeout(() => reject(new Error('Gemini API timeout')), TIMEOUTS.AI_API)
     );
 
-    const apiPromise = fetch(`${this.baseUrl}?key=${this.apiKey}`, {
+    const fullUrl = `${this.baseUrl}/${this.modelName}:generateContent?key=${this.apiKey}`;
+    console.log(`🌐 Full URL: ${fullUrl.replace(this.apiKey || '', 'API_KEY_HIDDEN')}`);
+
+    const apiPromise = fetch(fullUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -280,7 +296,11 @@ class GeminiService {
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('❌ Gemini API error:', response.status, errorText);
+      console.error('❌ Gemini API error:');
+      console.error('   Status:', response.status);
+      console.error('   Status Text:', response.statusText);
+      console.error('   Response:', errorText);
+      console.error('   URL used:', fullUrl.replace(this.apiKey || '', 'API_KEY_HIDDEN'));
 
       if (response.status === 400) {
         throw new Error(ERROR_MESSAGES.AI_INVALID_KEY);
@@ -296,13 +316,16 @@ class GeminiService {
     }
 
     const data = await response.json();
-    
+    console.log('📦 Raw API Response:', JSON.stringify(data, null, 2));
+
     if (!data.candidates || data.candidates.length === 0) {
+      console.error('❌ No candidates in response:', data);
       throw new Error(`No se pudo generar respuesta para ${operation}`);
     }
 
     const result = data.candidates[0].content.parts[0].text;
     console.log(`✅ ${operation} completed successfully`);
+    console.log(`📝 Result length: ${result.length} characters`);
     return result;
   }
 
