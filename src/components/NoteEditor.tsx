@@ -110,8 +110,8 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
 
     try {
       // Usar executePrompt para prompts personalizados y las funciones específicas para los por defecto
-      let improvedContent: string;
-      
+      let improvedContent: string = '';
+
       if (prompt.isDefault) {
         // Para prompts por defecto, usar las funciones específicas
         switch (prompt.name) {
@@ -128,8 +128,13 @@ export function NoteEditor({ note, folders, aiPrompts, hiddenPromptIds, onSave, 
         // Para prompts personalizados, usar executePrompt
         improvedContent = await geminiService.executePrompt(prompt.promptTemplate, currentContent);
       }
-      
-      setFieldValue('content', improvedContent);
+
+      // Solo actualizar si hay contenido mejorado
+      if (improvedContent && improvedContent.trim().length > 0) {
+        setFieldValue('content', improvedContent);
+      } else {
+        setAiError('No se pudo generar contenido mejorado');
+      }
     } catch (error) {
       setAiError(error instanceof Error ? error.message : 'Error mejorando la nota');
     } finally {

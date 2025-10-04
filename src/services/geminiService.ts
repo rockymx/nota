@@ -157,13 +157,19 @@ class GeminiService {
       throw new Error('El contenido de la nota está vacío');
     }
 
+    const improvePrompt = `Mejora el siguiente texto corrigiendo gramática, ortografía y estilo. Mantén el idioma original y el significado. Solo responde con el texto mejorado, sin explicaciones adicionales:\n\n${content}`;
+
     if (this.errorHandler) {
-      return await this.errorHandler.withAIErrorHandling(
-        () => this.callGeminiAPI(content, 'improve'),
+      const result = await this.errorHandler.withAIErrorHandling(
+        () => this.callGeminiAPI(improvePrompt, 'improve'),
         'improve_note_with_ai'
-      ) || '';
+      );
+      if (result === null) {
+        throw new Error('No se pudo mejorar la nota');
+      }
+      return result;
     } else {
-      return await this.callGeminiAPI(content, 'improve');
+      return await this.callGeminiAPI(improvePrompt, 'improve');
     }
   }
 
@@ -182,12 +188,16 @@ class GeminiService {
 
     // Reemplazar variables en el prompt
     const finalPrompt = promptTemplate.replace(/\{content\}/g, content);
-    
+
     if (this.errorHandler) {
-      return await this.errorHandler.withAIErrorHandling(
+      const result = await this.errorHandler.withAIErrorHandling(
         () => this.callGeminiAPI(finalPrompt, 'execute'),
         'execute_custom_prompt'
-      ) || '';
+      );
+      if (result === null) {
+        throw new Error('No se pudo ejecutar el prompt');
+      }
+      return result;
     } else {
       return await this.callGeminiAPI(finalPrompt, 'execute');
     }
@@ -203,12 +213,16 @@ class GeminiService {
     }
 
     const summaryPrompt = `Crea un resumen conciso del siguiente texto en máximo 2-3 oraciones. Mantén el idioma original:\n\n${content}`;
-    
+
     if (this.errorHandler) {
-      return await this.errorHandler.withAIErrorHandling(
+      const result = await this.errorHandler.withAIErrorHandling(
         () => this.callGeminiAPI(summaryPrompt, 'summary'),
         'generate_summary'
-      ) || '';
+      );
+      if (result === null) {
+        throw new Error('No se pudo generar el resumen');
+      }
+      return result;
     } else {
       return await this.callGeminiAPI(summaryPrompt, 'summary');
     }
@@ -224,12 +238,16 @@ class GeminiService {
     }
 
     const titlePrompt = `Genera un título corto y descriptivo (máximo 6 palabras) para el siguiente contenido. Solo responde con el título, sin comillas ni explicaciones:\n\n${content.substring(0, 500)}`;
-    
+
     if (this.errorHandler) {
-      return await this.errorHandler.withAIErrorHandling(
+      const result = await this.errorHandler.withAIErrorHandling(
         () => this.callGeminiAPI(titlePrompt, 'title'),
         'generate_title'
-      ) || 'Sin título';
+      );
+      if (result === null) {
+        throw new Error('No se pudo generar el título');
+      }
+      return result;
     } else {
       return await this.callGeminiAPI(titlePrompt, 'title');
     }
