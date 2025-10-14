@@ -70,9 +70,9 @@ console.log('✅ Supabase configuration validated successfully');
 // Crear cliente de Supabase con tipos TypeScript
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   auth: {
-    autoRefreshToken: false, // Temporarily disabled to prevent rate limiting
+    autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // Disable URL detection to prevent loops
+    detectSessionInUrl: true,
     storageKey: 'supabase.auth.token'
   }
 });
